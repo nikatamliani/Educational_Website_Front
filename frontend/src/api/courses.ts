@@ -52,6 +52,22 @@ export async function fetchMyCourses(): Promise<Course[]> {
   })
 }
 
+export async function fetchTeacherCourses(): Promise<Course[]> {
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+
+  if (!token) {
+    throw new Error('You must be logged in as a teacher to view your courses.')
+  }
+
+  return request<Course[]>('/api/course/my-teaching', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export async function enrollInCourse(courseId: number): Promise<void> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
 

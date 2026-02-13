@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchCourseById, fetchMyCourses, enrollInCourse, type Course } from '../api/courses'
+import { fetchCourseById, fetchMyCourses, fetchTeacherCourses, enrollInCourse, type Course } from '../api/courses'
 import { Button } from '../components/Button'
 import { useAuth } from '../context/AuthContext'
 
 export function CourseDetailsPage() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, user } = useAuth()
+    const isTeacher = user?.role === 'teacher'
+
     const [course, setCourse] = useState<Course | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [enrolling, setEnrolling] = useState(false)
     const [isEnrolled, setIsEnrolled] = useState(false)
+    const [isOwnCourse, setIsOwnCourse] = useState(false)
 
     useEffect(() => {
         let isMounted = true
@@ -27,14 +30,26 @@ export function CourseDetailsPage() {
                     throw new Error('Invalid course ID')
                 }
 
-                const [courseData, myCourses] = await Promise.all([
-                    fetchCourseById(courseId),
-                    isAuthenticated ? fetchMyCourses() : Promise.resolve([]),
-                ])
+                const courseData = await fetchCourseById(courseId)
+
+                if (isAuthenticated) {
+                    if (isTeacher) {
+                        // For teachers, check if this is their course
+                        const teacherCourses = await fetchTeacherCourses()
+                        if (isMounted) {
+                            setIsOwnCourse(teacherCourses.some((c) => c.id === courseData.id))
+                        }
+                    } else {
+                        // For students, check enrollment
+                        const myCourses = await fetchMyCourses()
+                        if (isMounted) {
+                            setIsEnrolled(myCourses.some((c) => c.id === courseData.id))
+                        }
+                    }
+                }
 
                 if (isMounted) {
                     setCourse(courseData)
-                    setIsEnrolled(myCourses.some((c) => c.id === courseData.id))
                 }
             } catch (err) {
                 if (isMounted) {
@@ -53,7 +68,7 @@ export function CourseDetailsPage() {
         return () => {
             isMounted = false
         }
-    }, [id, isAuthenticated])
+    }, [id, isAuthenticated, isTeacher])
 
     const handleEnroll = async () => {
         if (!course) return
@@ -66,7 +81,6 @@ export function CourseDetailsPage() {
             setEnrolling(true)
             await enrollInCourse(course.id)
             setIsEnrolled(true)
-            // Optionally show a success message or redirect
             alert('Successfully enrolled!')
             navigate('/my-courses')
         } catch (err) {
@@ -83,12 +97,12 @@ export function CourseDetailsPage() {
     return (
         <div className="page-container">
             <Button
-                onClick={() => navigate('/')}
+                onClick={() => navigate(-1)}
                 variant="ghost"
                 className="mb-4"
                 style={{ paddingLeft: 0, marginTop: '2rem' }}
             >
-                ← Back to Courses
+                ← Back
             </Button>
 
             <div className="course-details">
@@ -133,7 +147,17 @@ export function CourseDetailsPage() {
                             </div>
 
                             <div className="enroll-action">
-                                {isEnrolled ? (
+                                {isTeacher ? (
+                                    isOwnCourse ? (
+                                        <Button variant="outline" className="full-width" disabled>
+                                            Your Course
+                                        </Button>
+                                    ) : (
+                                        <Button variant="outline" className="full-width" disabled>
+                                            View Only
+                                        </Button>
+                                    )
+                                ) : isEnrolled ? (
                                     <Button variant="outline" className="full-width" disabled>
                                         Already Enrolled
                                     </Button>

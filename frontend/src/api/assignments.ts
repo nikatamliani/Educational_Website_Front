@@ -136,6 +136,70 @@ export async function fetchStudentAssignments(): Promise<Assignment[]> {
     }
 }
 
+// Existing DTO shapes returned by backend
+export interface AssignmentSubmissionResponse {
+    assignmentId: number
+    studentId: number
+    content: string | null
+    studentFirstName: string | null
+    studentLastName: string | null
+    studentUsername: string | null
+    assignmentTitle: string | null
+    assignmentDeadline: string | null
+    courseName: string | null
+}
+
+export interface AssignmentResultResponse {
+    assignmentId: number
+    studentId: number
+    grade: number | null
+    feedback: string | null
+    studentFirstName: string | null
+    studentLastName: string | null
+    studentUsername: string | null
+    assignmentTitle: string | null
+    courseName: string | null
+}
+
+export async function fetchTeacherSubmissions(): Promise<AssignmentSubmissionResponse[]> {
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    return await request<AssignmentSubmissionResponse[]>('/api/assignment/teacher-submissions', {
+        method: 'GET',
+        headers,
+    })
+}
+
+export async function fetchTeacherResults(): Promise<AssignmentResultResponse[]> {
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    return await request<AssignmentResultResponse[]>('/api/assignment/teacher-results', {
+        method: 'GET',
+        headers,
+    })
+}
+
+export async function saveAssignmentResult(data: {
+    assignmentId: number
+    studentId: number
+    grade: number
+    feedback: string
+}): Promise<AssignmentResultResponse> {
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    return await request<AssignmentResultResponse>('/api/assignment/result/save', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data),
+    })
+}
+
 export async function fetchAssignmentById(id: number): Promise<Assignment | null> {
     try {
         const token = localStorage.getItem('authToken')

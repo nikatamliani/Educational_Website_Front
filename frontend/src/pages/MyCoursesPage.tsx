@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchMyCourses, type Course } from '../api/courses'
+import { fetchMyCourses, fetchTeacherCourses, type Course } from '../api/courses'
+import { useAuth } from '../context/AuthContext'
 import { CourseCard } from '../components/CourseCard'
 
 export function MyCoursesPage() {
@@ -7,10 +8,9 @@ export function MyCoursesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const username =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('authUsername') ?? 'Student'
-      : 'Student'
+  const { user } = useAuth()
+  const username = user?.username ?? 'User'
+  const isTeacher = user?.role === 'teacher'
 
   useEffect(() => {
     let isMounted = true
@@ -18,7 +18,7 @@ export function MyCoursesPage() {
     async function loadCourses() {
       try {
         setLoading(true)
-        const data = await fetchMyCourses()
+        const data = isTeacher ? await fetchTeacherCourses() : await fetchMyCourses()
         if (isMounted) {
           setCourses(data)
         }
@@ -42,7 +42,7 @@ export function MyCoursesPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [isTeacher])
 
   const sortedCourses = useMemo(
     () =>
@@ -56,9 +56,11 @@ export function MyCoursesPage() {
 
   return (
     <div className="width-full">
-      <h1 className="page-title">My courses</h1>
+      <h1 className="page-title">My Courses</h1>
       <p className="page-description">
-        {`Courses you are enrolled in, ${username}.`}
+        {isTeacher
+          ? `Courses you are teaching, ${username}.`
+          : `Courses you are enrolled in, ${username}.`}
       </p>
 
       <div className="courses-section" style={{ marginTop: '2rem' }}>
@@ -68,7 +70,9 @@ export function MyCoursesPage() {
         )}
         {!loading && !error && sortedCourses.length === 0 && (
           <div className="courses-message">
-            You are not enrolled in any courses yet.
+            {isTeacher
+              ? 'You are not teaching any courses yet.'
+              : 'You are not enrolled in any courses yet.'}
           </div>
         )}
 
@@ -83,4 +87,3 @@ export function MyCoursesPage() {
     </div>
   )
 }
-

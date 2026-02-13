@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         let role: 'student' | 'teacher' = 'student';
         try {
             const roles = JSON.parse(localStorage.getItem('authRoles') || '[]');
-            if (roles.includes('TEACHER')) role = 'teacher';
+            if (roles.includes('ROLE_TEACHER')) role = 'teacher';
         } catch {
             // ignore
         }
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('authRoles', JSON.stringify(response.roles));
 
         // Determine role (simplified logic)
-        const role = response.roles.includes('TEACHER') ? 'teacher' : 'student';
+        const role = response.roles.includes('ROLE_TEACHER') ? 'teacher' : 'student';
 
         setUser({ username: response.username, role });
     };
