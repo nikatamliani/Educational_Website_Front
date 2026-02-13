@@ -100,3 +100,16 @@ export async function deleteCourse(id: number): Promise<void> {
     },
   })
 }
+
+export async function searchCourses(word: string): Promise<Course[]> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  return request<Course[]>(`/api/course/search?word=${encodeURIComponent(word)}`, {
+    method: 'GET',
+    headers,
+  })
+}
