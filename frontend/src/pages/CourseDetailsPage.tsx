@@ -1,11 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchCourseById, fetchMyCourses, fetchTeacherCourses } from '../api/courses'
-import { fetchAssignmentsByCourseId, createAssignment, updateAssignment, deleteAssignment, type CourseAssignment, type CreateAssignmentPayload } from '../api/assignments'
+import {
+    fetchCourseById,
+    fetchMyCourses,
+    fetchTeacherCourses,
+    enrollInCourse,
+    deleteCourse,
+    updateCourse, // Added updateCourse
+    type Course,
+} from '../api/courses'
+import {
+    fetchAssignmentsByCourseId,
+    createAssignment,
+    updateAssignment,
+    deleteAssignment,
+    type CourseAssignment,
+    type CreateAssignmentPayload,
+} from '../api/assignments'
 import { fetchQuizzesByCourseId, type CourseQuiz } from '../api/quizzes'
-import { enrollInCourse, deleteCourse, type Course } from '../api/courses'
 import { Button } from '../components/Button'
 import { useAuth } from '../context/AuthContext'
+import { CourseForm } from '../components/CourseForm' // Added CourseForm
 
 type TeacherCourseTab = 'assignments' | 'quizzes'
 
@@ -41,6 +56,12 @@ export function CourseDetailsPage() {
         startDate: '',
         deadline: '',
     })
+
+    // Edit Course State
+    const [isEditingCourse, setIsEditingCourse] = useState(false)
+    const [courseEditError, setCourseEditError] = useState<string | null>(null)
+    const [isDeletingCourse, setIsDeletingCourse] = useState(false)
+    const [isUpdatingCourse, setIsUpdatingCourse] = useState(false)
 
     useEffect(() => {
         let isMounted = true
@@ -142,18 +163,32 @@ export function CourseDetailsPage() {
         }
     }
 
-    const handleDelete = async () => {
-        if (!course || !isOwnCourse) return
+    // Course Management Handlers
+    const handleEditCourseSubmit = async (data: Partial<Course>) => {
+        if (!course) return
+        try {
+            setIsUpdatingCourse(true)
+            setCourseEditError(null)
+            const updated = await updateCourse({ ...data, id: course.id })
+            setCourse(updated)
+            setIsEditingCourse(false)
+        } catch (err) {
+            setCourseEditError(err instanceof Error ? err.message : 'Failed to update course')
+        } finally {
+            setIsUpdatingCourse(false)
+        }
+    }
 
-        if (window.confirm('Are you sure you want to delete this course? This action cannot be undone and will delete all associated assignments and quizzes.')) {
-            try {
-                await deleteCourse(course.id)
-                alert('Course deleted successfully.')
-                navigate('/my-courses')
-            } catch (err) {
-                console.error(err)
-                alert('Failed to delete course. Please try again.')
-            }
+    const handleDeleteCourse = async () => {
+        if (!course || !window.confirm('Are you sure you want to delete this course? This action cannot be undone and will delete all associated assignments and quizzes.')) return
+        try {
+            setIsDeletingCourse(true)
+            await deleteCourse(course.id)
+            alert('Course deleted successfully.')
+            navigate('/my-courses')
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to delete course')
+            setIsDeletingCourse(false)
         }
     }
 
@@ -242,9 +277,39 @@ export function CourseDetailsPage() {
                 ← Back
             </Button>
 
-            <div className="course-details">
-                <h1 className="course-title-large">{course.title}</h1>
+            {/* Course Info / Edit Form */}
+            {isEditingCourse && course ? (
+                <div style={{ marginBottom: '2rem' }}>
+                    <CourseForm
+                        initialData={course}
+                        onSubmit={handleEditCourseSubmit}
+                        onCancel={() => setIsEditingCourse(false)}
+                        isLoading={isUpdatingCourse}
+                        error={courseEditError}
+                        submitLabel="Update Course"
+                    />
+                </div>
+            ) : (
+                <div className="course-header">
+                    <h1 className="course-title">{course.title}</h1>
+                    <p className="course-description">{course.description}</p>
 
+                    {isOwnCourse && ( // Changed from isTeacher to isOwnCourse for accuracy
+                        <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+                            <Button onClick={() => setIsEditingCourse(true)}>Edit Course</Button>
+                            <Button
+                                onClick={handleDeleteCourse}
+                                style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.5)', color: '#fca5a5' }}
+                                disabled={isDeletingCourse}
+                            >
+                                {isDeletingCourse ? 'Deleting...' : 'Delete Course'}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="course-details">
                 <div className="course-info-grid">
                     <div className="course-main-content">
                         <section className="course-section">
@@ -293,7 +358,7 @@ export function CourseDetailsPage() {
                                             <Button
                                                 className="full-width"
                                                 variant="outline"
-                                                onClick={handleDelete}
+                                                onClick={handleDeleteCourse}
                                                 style={{ borderColor: '#ef4444', color: '#ef4444' }}
                                             >
                                                 Delete Course
