@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchCourseById, fetchMyCourses, fetchTeacherCourses } from '../api/courses'
-import { fetchAssignmentsByCourseId, createAssignment, deleteAssignment, type CourseAssignment, type CreateAssignmentPayload } from '../api/assignments'
+import { fetchAssignmentsByCourseId, createAssignment, updateAssignment, deleteAssignment, type CourseAssignment, type CreateAssignmentPayload } from '../api/assignments'
 import { fetchQuizzesByCourseId, type CourseQuiz } from '../api/quizzes'
 import { enrollInCourse, deleteCourse, type Course } from '../api/courses'
 import { Button } from '../components/Button'
@@ -28,8 +28,9 @@ export function CourseDetailsPage() {
     const [quizzes, setQuizzes] = useState<CourseQuiz[]>([])
     const [tabLoading, setTabLoading] = useState(false)
 
-    // Create assignment form state
+    // Create/Edit assignment form state
     const [showCreateForm, setShowCreateForm] = useState(false)
+    const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null)
     const [creating, setCreating] = useState(false)
     const [createError, setCreateError] = useState<string | null>(null)
     const [newAssignment, setNewAssignment] = useState<CreateAssignmentPayload>({
@@ -163,27 +164,51 @@ export function CourseDetailsPage() {
         try {
             setCreating(true)
             setCreateError(null)
-            await createAssignment({
+
+            const payload = {
                 ...newAssignment,
                 courseId: course.id,
                 startDate: newAssignment.startDate || undefined,
                 deadline: newAssignment.deadline || undefined,
-            })
+            }
+
+            if (editingAssignmentId) {
+                await updateAssignment(editingAssignmentId, payload)
+            } else {
+                await createAssignment(payload)
+            }
+
             // Refresh assignment list
             const data = await fetchAssignmentsByCourseId(course.id)
             setAssignments(data)
-            // Reset form
-            setNewAssignment({ courseId: 0, title: '', description: '', content: '', startDate: '', deadline: '' })
-            setShowCreateForm(false)
+            resetCreateForm()
         } catch (err) {
-            setCreateError(err instanceof Error ? err.message : 'Failed to create assignment.')
+            setCreateError(err instanceof Error ? err.message : 'Failed to save assignment.')
         } finally {
             setCreating(false)
         }
     }
 
+    const handleEditAssignment = (e: React.MouseEvent, assignment: CourseAssignment) => {
+        e.stopPropagation()
+        setEditingAssignmentId(assignment.id)
+        setNewAssignment({
+            courseId: assignment.courseId,
+            title: assignment.title,
+            description: assignment.description || '',
+            content: assignment.content || '',
+            startDate: assignment.startDate || '',
+            deadline: assignment.deadline || '',
+        })
+        setShowCreateForm(true)
+        setCreateError(null)
+        // Scroll to form
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
     const resetCreateForm = () => {
         setShowCreateForm(false)
+        setEditingAssignmentId(null)
         setCreateError(null)
         setNewAssignment({ courseId: 0, title: '', description: '', content: '', startDate: '', deadline: '' })
     }
@@ -341,7 +366,7 @@ export function CourseDetailsPage() {
                                         }}
                                     >
                                         <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 600, color: '#e5e7eb' }}>
-                                            New Assignment
+                                            {editingAssignmentId ? 'Edit Assignment' : 'New Assignment'}
                                         </h3>
 
                                         {createError && (
@@ -435,7 +460,7 @@ export function CourseDetailsPage() {
 
                                         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                                             <Button type="submit" disabled={creating || !newAssignment.title.trim()}>
-                                                {creating ? 'Creating…' : 'Create Assignment'}
+                                                {creating ? 'Saving…' : (editingAssignmentId ? 'Update Assignment' : 'Create Assignment')}
                                             </Button>
                                             <Button variant="ghost" type="button" onClick={resetCreateForm} disabled={creating}>
                                                 Cancel
@@ -489,7 +514,22 @@ export function CourseDetailsPage() {
                                                     )}
                                                 </div>
 
-                                                <div style={{ marginTop: '0.8rem', display: 'flex', justifyContent: 'flex-end' }}>
+                                                <div style={{ marginTop: '0.8rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={(e) => handleEditAssignment(e, a)}
+                                                        style={{
+                                                            color: '#fbbf24',
+                                                            padding: '0.3rem 0.6rem',
+                                                            fontSize: '0.85rem',
+                                                            height: 'auto',
+                                                            borderColor: 'rgba(251, 191, 36, 0.3)',
+                                                            borderWidth: '1px',
+                                                            borderStyle: 'solid'
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </Button>
                                                     <Button
                                                         variant="ghost"
                                                         onClick={(e) => handleDeleteAssignment(e, a.id)}
