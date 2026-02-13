@@ -202,6 +202,28 @@ export async function deleteAssignment(assignmentId: number): Promise<void> {
     })
 }
 
+export async function updateAssignment(assignmentId: number, payload: CreateAssignmentPayload): Promise<CourseAssignment> {
+    const token = localStorage.getItem('authToken')
+    if (!token) throw new Error('You must be logged in as a teacher to update assignments.')
+
+    return await request<CourseAssignment>('/api/assignment/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            id: assignmentId,
+            courseId: payload.courseId,
+            title: payload.title,
+            description: payload.description ?? '',
+            content: payload.content ?? '',
+            startDate: payload.startDate ?? null,
+            deadline: payload.deadline ?? null,
+        }),
+    })
+}
+
 // Existing DTO shapes returned by backend
 export interface AssignmentSubmissionResponse {
     assignmentId: number
