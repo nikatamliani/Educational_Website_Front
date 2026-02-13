@@ -11,7 +11,7 @@ import {
 import { AssignmentCard } from '../components/AssignmentCard'
 import { useAuth } from '../context/AuthContext'
 
-type StudentTab = 'upcoming' | 'submitted' | 'returned'
+type StudentTab = 'upcoming' | 'submitted' | 'returned' | 'past_due'
 type TeacherTab = 'not_graded' | 'graded'
 
 function studentFullName(firstName: string | null, lastName: string | null, fallback: string) {
@@ -140,6 +140,12 @@ export function AssignmentsPage() {
                         onClick={() => setStudentTab('returned')}
                     >
                         Returned
+                    </button>
+                    <button
+                        className={`student-nav-item ${studentTab === 'past_due' ? 'student-nav-item-active' : ''}`}
+                        onClick={() => setStudentTab('past_due')}
+                    >
+                        Past Due
                     </button>
                 </div>
 

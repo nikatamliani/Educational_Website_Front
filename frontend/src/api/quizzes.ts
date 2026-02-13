@@ -42,7 +42,7 @@ export interface QuizSubmissionDto {
 
 // ── Enriched frontend type ──────────────────────────────────────────
 
-export type QuizStatus = 'upcoming' | 'returned'
+export type QuizStatus = 'upcoming' | 'returned' | 'past_due'
 
 export interface Quiz {
     id: number
@@ -103,7 +103,12 @@ export async function fetchStudentQuizzes(): Promise<Quiz[]> {
                                 submittedAt = submission.submittedAt
                             }
                         } catch {
-                            // No submission found → still upcoming
+                            // No submission found
+                            // Check if endDate has passed → past due
+                            const endDate = new Date(dto.endDate)
+                            if (endDate.getTime() < Date.now()) {
+                                status = 'past_due'
+                            }
                         }
 
                         const quiz: Quiz = {

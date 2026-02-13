@@ -10,7 +10,11 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz }) => {
     const navigate = useNavigate()
 
     const getStatusColor = () => {
-        return quiz.status === 'returned' ? '#10b981' : '#f59e0b'
+        switch (quiz.status) {
+            case 'returned': return '#10b981'
+            case 'past_due': return '#ef4444'
+            default: return '#f59e0b'
+        }
     }
 
     const formatDate = (dateString: string) => {
@@ -25,14 +29,15 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz }) => {
     return (
         <article
             className="course-card"
-            onClick={() => navigate(`/quiz/${quiz.id}`)}
+            onClick={() => quiz.status !== 'past_due' && navigate(`/quiz/${quiz.id}`)}
             style={{
                 display: 'flex',
-                cursor: 'pointer',
+                cursor: quiz.status === 'past_due' ? 'default' : 'pointer',
                 flexDirection: 'column',
                 gap: '0.5rem',
                 position: 'relative',
                 overflow: 'hidden',
+                opacity: quiz.status === 'past_due' ? 0.75 : 1,
             }}
         >
             <div
@@ -78,6 +83,17 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz }) => {
                                     Submitted: {formatDate(quiz.submittedAt)}
                                 </span>
                             )}
+                        </>
+                    )}
+
+                    {quiz.status === 'past_due' && (
+                        <>
+                            <span className="course-pill" style={{ borderColor: '#ef4444', color: '#fca5a5' }}>
+                                Was due: {formatDate(quiz.endDate)}
+                            </span>
+                            <span className="course-pill" style={{ borderColor: '#ef4444', color: '#fca5a5' }}>
+                                🔒 Past Due
+                            </span>
                         </>
                     )}
                 </div>

@@ -2,7 +2,7 @@ import { request } from './client'
 import { fetchMyCourses } from './courses'
 
 
-export type AssignmentStatus = 'upcoming' | 'submitted' | 'returned'
+export type AssignmentStatus = 'upcoming' | 'submitted' | 'returned' | 'past_due'
 
 export interface Assignment {
     id: number
@@ -96,10 +96,17 @@ export async function fetchStudentAssignments(): Promise<Assignment[]> {
                                 )
                                 if (submission) {
                                     status = 'submitted'
-                                    // We don't have submission date in DTO, so we omit it or assume current/recent
                                 }
                             } catch (e) {
                                 // No submission found, ignore
+                            }
+                        }
+
+                        // If still upcoming and deadline has passed → past due
+                        if (status === 'upcoming' && dto.deadline) {
+                            const deadline = new Date(dto.deadline)
+                            if (deadline.getTime() < Date.now()) {
+                                status = 'past_due'
                             }
                         }
 
@@ -344,9 +351,16 @@ export async function fetchAssignmentById(id: number): Promise<Assignment | null
                 )
                 if (submission) {
                     status = 'submitted'
-                    // submittedDate = ...
                 }
             } catch (e) { }
+        }
+
+        // If still upcoming and deadline has passed → past due
+        if (status === 'upcoming' && dto.deadline) {
+            const deadline = new Date(dto.deadline)
+            if (deadline.getTime() < Date.now()) {
+                status = 'past_due'
+            }
         }
 
         return {

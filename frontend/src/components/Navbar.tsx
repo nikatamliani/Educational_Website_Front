@@ -120,7 +120,7 @@ export const Navbar: React.FC = () => {
                         <div className="dropdown-divider" />
                         <button
                             className="dropdown-item dropdown-item-danger"
-                            onClick={() => { setDropdownOpen(false); logout(); }}
+                            onClick={() => { setDropdownOpen(false); logout(); navigate('/login'); }}
                         >
                             <span>🚪</span> Logout
                         </button>

@@ -18,6 +18,8 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment }) =>
                 return '#3b82f6' // blue-500
             case 'returned':
                 return '#10b981' // emerald-500
+            case 'past_due':
+                return '#ef4444' // red-500
             default:
                 return '#9ca3af'
         }
@@ -35,14 +37,15 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment }) =>
     return (
         <article
             className="course-card"
-            onClick={() => navigate(`/assignment/${assignment.id}`)}
+            onClick={() => assignment.status !== 'past_due' && navigate(`/assignment/${assignment.id}`)}
             style={{
                 display: 'flex',
-                cursor: 'pointer',
+                cursor: assignment.status === 'past_due' ? 'default' : 'pointer',
                 flexDirection: 'column',
                 gap: '0.5rem',
                 position: 'relative',
                 overflow: 'hidden',
+                opacity: assignment.status === 'past_due' ? 0.75 : 1,
             }}
         >
             <div
@@ -89,6 +92,17 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment }) =>
                                     "{assignment.feedback}"
                                 </p>
                             )}
+                        </>
+                    )}
+
+                    {assignment.status === 'past_due' && (
+                        <>
+                            <span className="course-pill" style={{ borderColor: '#ef4444', color: '#fca5a5' }}>
+                                Was due: {formatDate(assignment.dueDate)}
+                            </span>
+                            <span className="course-pill" style={{ borderColor: '#ef4444', color: '#fca5a5' }}>
+                                🔒 Past Due
+                            </span>
                         </>
                     )}
                 </div>

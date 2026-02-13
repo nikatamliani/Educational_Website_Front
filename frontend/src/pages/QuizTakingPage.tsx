@@ -22,6 +22,9 @@ export function QuizTakingPage() {
     // Answers state: Map questionId -> selectedOption
     const [answers, setAnswers] = useState<Record<number, string>>({})
 
+    const isPastDue = quiz && new Date() > new Date(quiz.endDate)
+    const showReview = isPastDue // Show full review logic same as details page
+
     useEffect(() => {
         loadData()
     }, [quizId])
@@ -102,73 +105,108 @@ export function QuizTakingPage() {
                     <p style={{ color: '#94a3b8' }}>Submitted on {new Date(submission.submittedAt).toLocaleString()}</p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    {quiz.quizQuestionDtos.map((q, index) => {
-                        const userAns = submission.questionSubmissions.find(qs => qs.questionId === q.id)
-                        const isCorrect = userAns?.correct
-                        console.log(userAns);
+                {!showReview ? (
+                    <div style={{ textAlign: 'center', padding: '3rem', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '0.75rem' }}>
+                        <p style={{ fontSize: '1.2rem', color: '#94a3b8' }}>
+                            Detailed analysis will be available after the due date:<br />
+                            <strong>{new Date(quiz.endDate).toLocaleString()}</strong>
+                        </p>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        {quiz.quizQuestionDtos.map((q, index) => {
+                            const userAns = submission.questionSubmissions.find(qs => qs.questionId === q.id)
+                            const isCorrect = userAns?.correct
 
-                        return (
-                            <div key={q.id} style={{
-                                background: 'rgba(30, 41, 59, 0.4)',
-                                border: `1px solid ${isCorrect ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                                borderRadius: '0.75rem',
-                                padding: '1.5rem'
-                            }}>
-                                <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#e5e7eb' }}>
-                                    {index + 1}. {q.question}
-                                </h4>
+                            return (
+                                <div key={q.id} style={{
+                                    background: 'rgba(30, 41, 59, 0.4)',
+                                    border: `1px solid ${isCorrect ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                                    borderRadius: '0.75rem',
+                                    padding: '1.5rem'
+                                }}>
+                                    <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#e5e7eb' }}>
+                                        {index + 1}. {q.question}
+                                    </h4>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                    {[
-                                        { label: 'A', text: q.optionA },
-                                        { label: 'B', text: q.optionB },
-                                        { label: 'C', text: q.optionC },
-                                        { label: 'D', text: q.optionD }
-                                    ].map((opt) => {
-                                        const isSelected = userAns?.selectedOption === opt.label
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                        {[
+                                            { label: 'A', text: q.optionA },
+                                            { label: 'B', text: q.optionB },
+                                            { label: 'C', text: q.optionC },
+                                            { label: 'D', text: q.optionD }
+                                        ].map((opt) => {
+                                            const isSelected = userAns?.selectedOption === opt.label
+                                            const isActuallyCorrect = userAns?.correctOption === opt.label
 
-                                        // Note: Backend now returns correctOption in the submission DTO.
+                                            let bg = 'rgba(15, 23, 42, 0.4)'
+                                            let borderColor = 'transparent'
 
+                                            if (isActuallyCorrect) {
+                                                bg = 'rgba(34, 197, 94, 0.15)'
+                                                borderColor = 'rgba(34, 197, 94, 0.4)'
+                                            }
 
-                                        let bg = 'rgba(15, 23, 42, 0.4)'
-                                        let borderColor = 'transparent'
-
-                                        if (isSelected) {
-                                            if (isCorrect) {
-                                                bg = 'rgba(34, 197, 94, 0.2)'
-                                                borderColor = 'rgba(34, 197, 94, 0.5)'
-                                            } else {
+                                            if (isSelected && !isCorrect) {
                                                 bg = 'rgba(239, 68, 68, 0.2)'
                                                 borderColor = 'rgba(239, 68, 68, 0.5)'
                                             }
-                                        }
 
-                                        // Highlight the correct answer if the user got it wrong (or didn't answer)
-                                        const isActuallyCorrect = userAns?.correctOption === opt.label
-                                        if (isActuallyCorrect && !isCorrect) {
-                                            bg = 'rgba(34, 197, 94, 0.1)'
-                                            borderColor = 'rgba(34, 197, 94, 0.3)'
-                                        }
+                                            if (isSelected && isCorrect) {
+                                                bg = 'rgba(34, 197, 94, 0.2)'
+                                                borderColor = 'rgba(34, 197, 94, 0.5)'
+                                            }
 
-                                        return (
-                                            <div key={opt.label} style={{
-                                                padding: '0.75rem 1rem',
-                                                borderRadius: '0.5rem',
-                                                background: bg,
-                                                border: `1px solid ${borderColor}`,
-                                                color: isSelected ? 'white' : '#94a3b8',
-                                            }}>
-                                                <span style={{ fontWeight: 'bold', marginRight: '0.5rem' }}>{opt.label}.</span>
-                                                {opt.text}
-                                            </div>
-                                        )
-                                    })}
+                                            return (
+                                                <div key={opt.label} style={{
+                                                    padding: '0.75rem 1rem',
+                                                    borderRadius: '0.5rem',
+                                                    background: bg,
+                                                    border: `1px solid ${borderColor}`,
+                                                    color: isSelected ? 'white' : '#94a3b8',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.5rem',
+                                                }}>
+                                                    <span style={{ fontWeight: 'bold', marginRight: '0.25rem' }}>{opt.label}.</span>
+                                                    <span style={{ flex: 1 }}>{opt.text}</span>
+                                                    {isActuallyCorrect && (
+                                                        <span style={{ color: '#4ade80', fontSize: '0.8rem', fontWeight: 600 }}>✓ Correct</span>
+                                                    )}
+                                                    {isSelected && !isCorrect && (
+                                                        <span style={{ color: '#f87171', fontSize: '0.8rem', fontWeight: 600 }}>✗ Your answer</span>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+
+                                    {/* Answer summary */}
+                                    <div style={{
+                                        marginTop: '0.75rem',
+                                        padding: '0.5rem 0.75rem',
+                                        borderRadius: '0.5rem',
+                                        background: isCorrect ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                                        fontSize: '0.85rem',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                    }}>
+                                        <span style={{ color: '#94a3b8' }}>
+                                            Your answer: <strong style={{ color: isCorrect ? '#4ade80' : '#f87171' }}>
+                                                {userAns?.selectedOption ?? 'No answer'}
+                                            </strong>
+                                        </span>
+                                        <span style={{ color: '#94a3b8' }}>
+                                            Correct answer: <strong style={{ color: '#4ade80' }}>
+                                                {userAns?.correctOption ?? '—'}
+                                            </strong>
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                    })}
-                </div>
+                            )
+                        })}
+                    </div>
+                )}
             </div>
         )
     }
@@ -191,59 +229,79 @@ export function QuizTakingPage() {
                 </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginBottom: '3rem' }}>
-                {quiz.quizQuestionDtos.map((q, index) => (
-                    <div key={q.id} style={{
-                        background: 'rgba(30, 41, 59, 0.4)',
-                        border: '1px solid rgba(148, 163, 184, 0.1)',
-                        borderRadius: '0.75rem',
-                        padding: '1.5rem'
-                    }}>
-                        <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#e5e7eb' }}>
-                            {index + 1}. {q.question}
-                        </h4>
+            {isPastDue && !submission ? (
+                <div style={{ textAlign: 'center', marginTop: '4rem' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔒</div>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>This quiz is past due</h2>
+                    <p style={{ color: '#94a3b8' }}>
+                        The deadline was {new Date(quiz.endDate).toLocaleString()}.<br />
+                        You can no longer take this quiz.
+                    </p>
+                    <Button
+                        onClick={() => navigate(`/course/${courseId}`)}
+                        variant="primary"
+                        style={{ marginTop: '2rem' }}
+                    >
+                        Return to Course
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginBottom: '3rem' }}>
+                        {quiz.quizQuestionDtos.map((q, index) => (
+                            <div key={q.id} style={{
+                                background: 'rgba(30, 41, 59, 0.4)',
+                                border: '1px solid rgba(148, 163, 184, 0.1)',
+                                borderRadius: '0.75rem',
+                                padding: '1.5rem'
+                            }}>
+                                <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#e5e7eb' }}>
+                                    {index + 1}. {q.question}
+                                </h4>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {[
-                                { label: 'A', text: q.optionA },
-                                { label: 'B', text: q.optionB },
-                                { label: 'C', text: q.optionC },
-                                { label: 'D', text: q.optionD }
-                            ].map((opt) => (
-                                <label key={opt.label} style={{
-                                    display: 'flex', alignItems: 'center', gap: '1rem',
-                                    padding: '0.75rem 1rem',
-                                    borderRadius: '0.5rem',
-                                    background: answers[q.id] === opt.label ? 'rgba(99, 102, 241, 0.2)' : 'rgba(15, 23, 42, 0.4)',
-                                    border: `1px solid ${answers[q.id] === opt.label ? 'rgba(99, 102, 241, 0.5)' : 'rgba(148, 163, 184, 0.1)'}`,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name={`q-${q.id}`}
-                                        value={opt.label}
-                                        checked={answers[q.id] === opt.label}
-                                        onChange={() => handleOptionSelect(q.id, opt.label)}
-                                        style={{ accentColor: '#6366f1', width: '1.2rem', height: '1.2rem' }}
-                                    />
-                                    <span style={{ color: 'white' }}>{opt.text}</span>
-                                </label>
-                            ))}
-                        </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    {[
+                                        { label: 'A', text: q.optionA },
+                                        { label: 'B', text: q.optionB },
+                                        { label: 'C', text: q.optionC },
+                                        { label: 'D', text: q.optionD }
+                                    ].map((opt) => (
+                                        <label key={opt.label} style={{
+                                            display: 'flex', alignItems: 'center', gap: '1rem',
+                                            padding: '0.75rem 1rem',
+                                            borderRadius: '0.5rem',
+                                            background: answers[q.id] === opt.label ? 'rgba(99, 102, 241, 0.2)' : 'rgba(15, 23, 42, 0.4)',
+                                            border: `1px solid ${answers[q.id] === opt.label ? 'rgba(99, 102, 241, 0.5)' : 'rgba(148, 163, 184, 0.1)'}`,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}>
+                                            <input
+                                                type="radio"
+                                                name={`q-${q.id}`}
+                                                value={opt.label}
+                                                checked={answers[q.id] === opt.label}
+                                                onChange={() => handleOptionSelect(q.id, opt.label)}
+                                                style={{ accentColor: '#6366f1', width: '1.2rem', height: '1.2rem' }}
+                                            />
+                                            <span style={{ color: 'white' }}>{opt.text}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4rem' }}>
-                <Button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    style={{ fontSize: '1.2rem', padding: '1rem 3rem' }}
-                >
-                    {submitting ? 'Submitting...' : 'Submit Quiz'}
-                </Button>
-            </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '4rem' }}>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={submitting}
+                            style={{ fontSize: '1.2rem', padding: '1rem 3rem' }}
+                        >
+                            {submitting ? 'Submitting...' : 'Submit Quiz'}
+                        </Button>
+                    </div>
+                </>
+            )}
         </div>
     )
 }

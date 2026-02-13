@@ -3,7 +3,8 @@ import { fetchStudentQuizzes, fetchTeacherQuizzes, type Quiz } from '../api/quiz
 import { QuizCard } from '../components/QuizCard'
 import { useAuth } from '../context/AuthContext'
 
-type Tab = 'upcoming' | 'returned'
+
+
 
 export function QuizzesPage() {
     const { user } = useAuth()
@@ -12,7 +13,7 @@ export function QuizzesPage() {
     const [quizzes, setQuizzes] = useState<Quiz[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [activeTab, setActiveTab] = useState<Tab>('upcoming')
+    const [activeTab, setActiveTab] = useState<string>('upcoming')
 
     useEffect(() => {
         let isMounted = true
@@ -68,6 +69,14 @@ export function QuizzesPage() {
                 >
                     Returned
                 </button>
+                {!isTeacher && (
+                    <button
+                        className={`student-nav-item ${activeTab === 'past_due' ? 'student-nav-item-active' : ''}`}
+                        onClick={() => setActiveTab('past_due')}
+                    >
+                        Past Due
+                    </button>
+                )}
             </div>
 
             <div className="courses-section">

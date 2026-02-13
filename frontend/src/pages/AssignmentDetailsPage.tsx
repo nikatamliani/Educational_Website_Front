@@ -70,6 +70,7 @@ export const AssignmentDetailsPage: React.FC = () => {
             case 'upcoming': return '#f59e0b'
             case 'submitted': return '#3b82f6'
             case 'returned': return '#10b981'
+            case 'past_due': return '#ef4444'
             default: return '#9ca3af'
         }
     }
@@ -133,14 +134,16 @@ export const AssignmentDetailsPage: React.FC = () => {
                         backgroundColor:
                             assignment.status === 'returned' ? 'rgba(16, 185, 129, 0.2)' :
                                 assignment.status === 'submitted' ? 'rgba(59, 130, 246, 0.2)' :
-                                    'rgba(245, 158, 11, 0.2)',
+                                    assignment.status === 'past_due' ? 'rgba(239, 68, 68, 0.2)' :
+                                        'rgba(245, 158, 11, 0.2)',
                         color:
                             assignment.status === 'returned' ? '#6ee7b7' :
                                 assignment.status === 'submitted' ? '#93c5fd' :
-                                    '#fcd34d',
+                                    assignment.status === 'past_due' ? '#fca5a5' :
+                                        '#fcd34d',
                         border: `1px solid ${getStatusColor(assignment.status)}`
                     }}>
-                        Status: {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                        Status: {assignment.status === 'past_due' ? '🔒 Past Due' : assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
                     </span>
 
                     {assignment.grade !== undefined && (
@@ -178,11 +181,27 @@ export const AssignmentDetailsPage: React.FC = () => {
                 <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #374151' }}>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', marginBottom: '1rem' }}>
                         {assignment.status === 'returned' ? 'Submission (Returned)' :
-                            assignment.status === 'submitted' ? 'Update Submission' : 'Your Submission'}
+                            assignment.status === 'past_due' ? 'Submission (Past Due)' :
+                                assignment.status === 'submitted' ? 'Update Submission' : 'Your Submission'}
                     </h3>
 
                     {assignment.status === 'returned' ? (
                         <p style={{ color: '#9ca3af' }}>This assignment has been graded. No further submissions are allowed.</p>
+                    ) : assignment.status === 'past_due' ? (
+                        <div style={{
+                            padding: '1.25rem',
+                            borderRadius: '0.75rem',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            textAlign: 'center',
+                        }}>
+                            <p style={{ color: '#fca5a5', fontSize: '1.1rem', fontWeight: '600', margin: '0 0 0.5rem 0' }}>
+                                🔒 This assignment is past due
+                            </p>
+                            <p style={{ color: '#9ca3af', margin: 0 }}>
+                                The deadline was {new Date(assignment.dueDate).toLocaleString()}. Submissions are no longer accepted.
+                            </p>
+                        </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <textarea

@@ -108,8 +108,14 @@ export const QuizDetailsPage: React.FC = () => {
         )
     }
 
+    const now = new Date()
+    const endDate = quiz ? new Date(quiz.endDate) : new Date()
+    const isPastDeadline = now > endDate
+    const showFullReview = isPastDeadline // Only show full answers (green/red) after deadline
+
     const isReturned = !!submission
-    const statusColor = isReturned ? '#10b981' : '#f59e0b'
+    const isLocked = !isReturned && isPastDeadline // Lock if not submitted and past deadline
+    const statusColor = isLocked ? '#ef4444' : isReturned ? '#10b981' : '#f59e0b'
 
     // Build a map of questionId -> submission answer for returned quizzes
     const submissionMap: Record<number, { selectedOption: string; correct: boolean }> = {}
@@ -169,11 +175,11 @@ export const QuizDetailsPage: React.FC = () => {
 
                     <span style={{
                         padding: '0.25rem 0.75rem', borderRadius: '9999px',
-                        backgroundColor: isReturned ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                        color: isReturned ? '#6ee7b7' : '#fcd34d',
+                        backgroundColor: isLocked ? 'rgba(239, 68, 68, 0.2)' : isReturned ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                        color: isLocked ? '#fca5a5' : isReturned ? '#6ee7b7' : '#fcd34d',
                         border: `1px solid ${statusColor}`
                     }}>
-                        {isReturned ? 'Graded' : 'Upcoming'}
+                        {isLocked ? '🔒 Past Due' : isReturned ? 'Graded' : 'Upcoming'}
                     </span>
                 </div>
 
@@ -195,145 +201,177 @@ export const QuizDetailsPage: React.FC = () => {
                                 ? 'Perfect score! 🌟'
                                 : `You got ${submission.score} out of ${quiz.quizQuestionDtos.length} correct.`}
                         </p>
+                        {!showFullReview && (
+                            <p style={{ color: '#d1d5db', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                                Full results (correct answers) will be available after the deadline: {endDate.toLocaleString()}
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* Locked / Past Due Banner */}
+                {isLocked && (
+                    <div style={{
+                        marginBottom: '2rem', padding: '1.25rem', textAlign: 'center',
+                        borderRadius: '0.75rem', border: '1px solid rgba(239, 68, 68, 0.3)',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                    }}>
+                        <p style={{ color: '#fca5a5', fontSize: '1.2rem', fontWeight: 'bold', margin: '0' }}>
+                            🔒 This quiz is past due
+                        </p>
+                        <p style={{ color: '#9ca3af', marginTop: '0.5rem' }}>
+                            The deadline was {endDate.toLocaleString()}. Starting new attempts is no longer allowed.
+                        </p>
                     </div>
                 )}
 
                 {/* Questions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {quiz.quizQuestionDtos.map((question, index) => {
-                        const sub = submissionMap[question.id]
-                        const options = [
-                            { key: 'A', text: question.optionA },
-                            { key: 'B', text: question.optionB },
-                            { key: 'C', text: question.optionC },
-                            { key: 'D', text: question.optionD },
-                        ]
+                {isReturned && !showFullReview ? (
+                    <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af', borderTop: '1px solid #374151', borderBottom: '1px solid #374151' }}>
+                        <p style={{ fontSize: '1.1rem' }}>
+                            Questions and answers are hidden until the quiz closes on <strong>{endDate.toLocaleString()}</strong>.
+                        </p>
+                        <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.8 }}>
+                            You scored {submission!.score} / {quiz.quizQuestionDtos.length}
+                        </p>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto' }}>
+                        {quiz.quizQuestionDtos.map((question, index) => {
+                            const sub = submissionMap[question.id]
+                            const options = [
+                                { key: 'A', text: question.optionA },
+                                { key: 'B', text: question.optionB },
+                                { key: 'C', text: question.optionC },
+                                { key: 'D', text: question.optionD },
+                            ]
 
-                        return (
-                            <div
-                                key={question.id}
-                                style={{
-                                    padding: '1.25rem',
-                                    backgroundColor: '#111827',
-                                    borderRadius: '0.75rem',
-                                    border: sub
-                                        ? sub.correct
-                                            ? '1px solid rgba(16,185,129,0.3)'
-                                            : '1px solid rgba(239,68,68,0.3)'
-                                        : '1px solid #374151',
-                                }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                    <h4 style={{ color: 'white', fontWeight: '600', margin: 0 }}>
-                                        {index + 1}. {question.question}
-                                    </h4>
-                                    {sub && (
-                                        <span style={{
-                                            flexShrink: 0, marginLeft: '0.75rem',
-                                            padding: '0.15rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem',
-                                            backgroundColor: sub.correct ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
-                                            color: sub.correct ? '#6ee7b7' : '#fca5a5',
-                                            border: `1px solid ${sub.correct ? '#10b981' : '#ef4444'}`,
-                                        }}>
-                                            {sub.correct ? '✓ Correct' : '✗ Wrong'}
-                                        </span>
-                                    )}
-                                </div>
+                            return (
+                                <div
+                                    key={question.id}
+                                    style={{
+                                        padding: '1.25rem',
+                                        backgroundColor: '#111827',
+                                        borderRadius: '0.75rem',
+                                        border: sub && showFullReview
+                                            ? sub.correct
+                                                ? '1px solid rgba(16,185,129,0.3)'
+                                                : '1px solid rgba(239,68,68,0.3)'
+                                            : '1px solid #374151',
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                        <h4 style={{ color: 'white', fontWeight: '600', margin: 0 }}>
+                                            {index + 1}. {question.question}
+                                        </h4>
+                                        {sub && showFullReview && (
+                                            <span style={{
+                                                flexShrink: 0, marginLeft: '0.75rem',
+                                                padding: '0.15rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem',
+                                                backgroundColor: sub.correct ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+                                                color: sub.correct ? '#6ee7b7' : '#fca5a5',
+                                                border: `1px solid ${sub.correct ? '#10b981' : '#ef4444'}`,
+                                            }}>
+                                                {sub.correct ? '✓ Correct' : '✗ Wrong'}
+                                            </span>
+                                        )}
+                                    </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {options.map((opt) => {
-                                        const isSelected = isReturned
-                                            ? sub?.selectedOption === opt.key
-                                            : answers[question.id] === opt.key
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        {options.map((opt) => {
+                                            const isSelected = isReturned
+                                                ? sub?.selectedOption === opt.key
+                                                : answers[question.id] === opt.key
 
-                                        let optionStyle: React.CSSProperties = {
-                                            display: 'flex', alignItems: 'center', gap: '0.75rem',
-                                            padding: '0.75rem 1rem', borderRadius: '0.5rem',
-                                            cursor: isReturned ? 'default' : 'pointer',
-                                            transition: 'all 0.15s ease',
-                                            border: '1px solid #374151',
-                                            backgroundColor: '#1f2937',
-                                            color: '#d1d5db',
-                                        }
+                                            let optionStyle: React.CSSProperties = {
+                                                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                                padding: '0.75rem 1rem', borderRadius: '0.5rem',
+                                                cursor: isReturned || isLocked ? 'default' : 'pointer',
+                                                transition: 'all 0.15s ease',
+                                                border: '1px solid #374151',
+                                                backgroundColor: '#1f2937',
+                                                color: '#d1d5db',
+                                            }
 
-                                        if (isReturned && sub) {
-                                            if (sub.selectedOption === opt.key) {
+                                            if (isReturned && sub && showFullReview) {
+                                                if (sub.selectedOption === opt.key) {
+                                                    optionStyle = {
+                                                        ...optionStyle,
+                                                        backgroundColor: sub.correct
+                                                            ? 'rgba(16,185,129,0.15)'
+                                                            : 'rgba(239,68,68,0.15)',
+                                                        borderColor: sub.correct ? '#10b981' : '#ef4444',
+                                                        color: sub.correct ? '#6ee7b7' : '#fca5a5',
+                                                    }
+                                                }
+                                            } else if (isSelected) {
                                                 optionStyle = {
                                                     ...optionStyle,
-                                                    backgroundColor: sub.correct
-                                                        ? 'rgba(16,185,129,0.15)'
-                                                        : 'rgba(239,68,68,0.15)',
-                                                    borderColor: sub.correct ? '#10b981' : '#ef4444',
-                                                    color: sub.correct ? '#6ee7b7' : '#fca5a5',
+                                                    backgroundColor: 'rgba(59,130,246,0.15)',
+                                                    borderColor: '#3b82f6',
+                                                    color: '#93c5fd',
                                                 }
                                             }
-                                        } else if (isSelected) {
-                                            optionStyle = {
-                                                ...optionStyle,
-                                                backgroundColor: 'rgba(59,130,246,0.15)',
-                                                borderColor: '#3b82f6',
-                                                color: '#93c5fd',
-                                            }
-                                        }
 
-                                        return (
-                                            <label
-                                                key={opt.key}
-                                                style={optionStyle}
-                                                onMouseEnter={(e) => {
-                                                    if (!isReturned) {
-                                                        (e.currentTarget as HTMLElement).style.borderColor = '#6b7280'
-                                                    }
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    if (!isReturned && !isSelected) {
-                                                        (e.currentTarget as HTMLElement).style.borderColor = '#374151'
-                                                    }
-                                                }}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name={`question-${question.id}`}
-                                                    value={opt.key}
-                                                    checked={isSelected}
-                                                    disabled={isReturned}
-                                                    onChange={() => handleOptionSelect(question.id, opt.key)}
-                                                    style={{ display: 'none' }}
-                                                />
-                                                <span style={{
-                                                    width: '1.75rem', height: '1.75rem', borderRadius: '50%',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: '0.8rem', fontWeight: '600', flexShrink: 0,
-                                                    border: isSelected
-                                                        ? isReturned
-                                                            ? sub?.correct
-                                                                ? '2px solid #10b981'
-                                                                : '2px solid #ef4444'
-                                                            : '2px solid #3b82f6'
-                                                        : '2px solid #4b5563',
-                                                    backgroundColor: isSelected
-                                                        ? isReturned
-                                                            ? sub?.correct
-                                                                ? 'rgba(16,185,129,0.3)'
-                                                                : 'rgba(239,68,68,0.3)'
-                                                            : 'rgba(59,130,246,0.3)'
-                                                        : 'transparent',
-                                                    color: isSelected ? 'white' : '#9ca3af',
-                                                }}>
-                                                    {opt.key}
-                                                </span>
-                                                <span>{opt.text}</span>
-                                            </label>
-                                        )
-                                    })}
+                                            return (
+                                                <label
+                                                    key={opt.key}
+                                                    style={optionStyle}
+                                                    onMouseEnter={(e) => {
+                                                        if (!isReturned && !isLocked) {
+                                                            (e.currentTarget as HTMLElement).style.borderColor = '#6b7280'
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!isReturned && !isLocked && !isSelected) {
+                                                            (e.currentTarget as HTMLElement).style.borderColor = '#374151'
+                                                        }
+                                                    }}
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name={`question-${question.id}`}
+                                                        value={opt.key}
+                                                        checked={isSelected}
+                                                        disabled={isReturned || isLocked}
+                                                        onChange={() => handleOptionSelect(question.id, opt.key)}
+                                                        style={{ display: 'none' }}
+                                                    />
+                                                    <span style={{
+                                                        width: '1.75rem', height: '1.75rem', borderRadius: '50%',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontSize: '0.8rem', fontWeight: '600', flexShrink: 0,
+                                                        border: isSelected
+                                                            ? isReturned && showFullReview
+                                                                ? sub?.correct
+                                                                    ? '2px solid #10b981'
+                                                                    : '2px solid #ef4444'
+                                                                : '2px solid #3b82f6'
+                                                            : '2px solid #4b5563',
+                                                        backgroundColor: isSelected
+                                                            ? isReturned && showFullReview
+                                                                ? sub?.correct
+                                                                    ? 'rgba(16,185,129,0.3)'
+                                                                    : 'rgba(239,68,68,0.3)'
+                                                                : 'rgba(59,130,246,0.3)'
+                                                            : 'transparent',
+                                                        color: isSelected ? 'white' : '#9ca3af',
+                                                    }}>
+                                                        {opt.key}
+                                                    </span>
+                                                    <span>{opt.text}</span>
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                    })}
-                </div>
+                            )
+                        })}
+                    </div>
+                )}
 
                 {/* Submit area */}
-                {!isReturned && (
+                {!isReturned && !isLocked && (
                     <div style={{
                         marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #374151',
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
