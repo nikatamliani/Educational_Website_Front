@@ -2,12 +2,13 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
 export async function request<T>(path: string, init: RequestInit): Promise<T> {
+  const { headers: initHeaders, ...restInit } = init
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...restInit,
     headers: {
       'Content-Type': 'application/json',
-      ...(init.headers ?? {}),
+      ...((initHeaders as Record<string, string>) ?? {}),
     },
-    ...init,
   })
 
   if (!response.ok) {
