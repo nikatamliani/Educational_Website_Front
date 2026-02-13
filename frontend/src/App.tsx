@@ -6,6 +6,8 @@ import { HomePage } from './pages/HomePage'
 import { CourseDetailsPage } from './pages/CourseDetailsPage'
 import { AssignmentsPage } from './pages/AssignmentsPage'
 import { AssignmentDetailsPage } from './pages/AssignmentDetailsPage'
+import { QuizzesPage } from './pages/QuizzesPage'
+import { QuizDetailsPage } from './pages/QuizDetailsPage'
 import { LoginPage } from './pages/LoginPage'
 import { StudentRegisterPage } from './pages/StudentRegisterPage'
 import { TeacherRegisterPage } from './pages/TeacherRegisterPage'
@@ -23,6 +25,8 @@ function AppLayout() {
           <Route path="/my-courses" element={<MyCoursesPage />} />
           <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/assignment/:id" element={<AssignmentDetailsPage />} />
+          <Route path="/quizzes" element={<QuizzesPage />} />
+          <Route path="/quiz/:id" element={<QuizDetailsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register/student" element={<StudentRegisterPage />} />
           <Route path="/register/teacher" element={<TeacherRegisterPage />} />
