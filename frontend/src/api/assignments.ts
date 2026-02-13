@@ -158,6 +158,38 @@ export async function fetchAssignmentsByCourseId(courseId: number): Promise<Cour
     })
 }
 
+// ─── Teacher: create a new assignment ───
+export interface CreateAssignmentPayload {
+    courseId: number
+    title: string
+    description?: string
+    content?: string
+    startDate?: string  // ISO datetime string
+    deadline?: string   // ISO datetime string
+}
+
+export async function createAssignment(payload: CreateAssignmentPayload): Promise<CourseAssignment> {
+    const token = localStorage.getItem('authToken')
+    if (!token) throw new Error('You must be logged in as a teacher to create assignments.')
+
+    return await request<CourseAssignment>('/api/assignment/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            id: 0,
+            courseId: payload.courseId,
+            title: payload.title,
+            description: payload.description ?? '',
+            content: payload.content ?? '',
+            startDate: payload.startDate ?? null,
+            deadline: payload.deadline ?? null,
+        }),
+    })
+}
+
 // Existing DTO shapes returned by backend
 export interface AssignmentSubmissionResponse {
     assignmentId: number

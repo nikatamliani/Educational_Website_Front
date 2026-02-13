@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchCourseById, fetchMyCourses, fetchTeacherCourses } from '../api/courses'
-import { fetchAssignmentsByCourseId, type CourseAssignment } from '../api/assignments'
+import { fetchAssignmentsByCourseId, createAssignment, type CourseAssignment, type CreateAssignmentPayload } from '../api/assignments'
 import { fetchQuizzesByCourseId, type CourseQuiz } from '../api/quizzes'
 import { enrollInCourse, deleteCourse, type Course } from '../api/courses'
 import { Button } from '../components/Button'
@@ -27,6 +27,19 @@ export function CourseDetailsPage() {
     const [assignments, setAssignments] = useState<CourseAssignment[]>([])
     const [quizzes, setQuizzes] = useState<CourseQuiz[]>([])
     const [tabLoading, setTabLoading] = useState(false)
+
+    // Create assignment form state
+    const [showCreateForm, setShowCreateForm] = useState(false)
+    const [creating, setCreating] = useState(false)
+    const [createError, setCreateError] = useState<string | null>(null)
+    const [newAssignment, setNewAssignment] = useState<CreateAssignmentPayload>({
+        courseId: 0,
+        title: '',
+        description: '',
+        content: '',
+        startDate: '',
+        deadline: '',
+    })
 
     useEffect(() => {
         let isMounted = true
@@ -141,6 +154,38 @@ export function CourseDetailsPage() {
                 alert('Failed to delete course. Please try again.')
             }
         }
+    }
+
+    const handleCreateAssignment = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!course || !newAssignment.title.trim()) return
+
+        try {
+            setCreating(true)
+            setCreateError(null)
+            await createAssignment({
+                ...newAssignment,
+                courseId: course.id,
+                startDate: newAssignment.startDate || undefined,
+                deadline: newAssignment.deadline || undefined,
+            })
+            // Refresh assignment list
+            const data = await fetchAssignmentsByCourseId(course.id)
+            setAssignments(data)
+            // Reset form
+            setNewAssignment({ courseId: 0, title: '', description: '', content: '', startDate: '', deadline: '' })
+            setShowCreateForm(false)
+        } catch (err) {
+            setCreateError(err instanceof Error ? err.message : 'Failed to create assignment.')
+        } finally {
+            setCreating(false)
+        }
+    }
+
+    const resetCreateForm = () => {
+        setShowCreateForm(false)
+        setCreateError(null)
+        setNewAssignment({ courseId: 0, title: '', description: '', content: '', startDate: '', deadline: '' })
     }
 
     if (loading) return <div className="page-container"><div className="courses-message">Loading...</div></div>
@@ -260,55 +305,181 @@ export function CourseDetailsPage() {
 
                     {/* Assignments tab */}
                     {!tabLoading && teacherTab === 'assignments' && (
-                        assignments.length === 0 ? (
-                            <div className="courses-message">No assignments for this course yet.</div>
-                        ) : (
-                            <div className="courses-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-                                {assignments.map((a) => (
-                                    <article
-                                        key={a.id}
-                                        className="course-card"
-                                        onClick={() => navigate(`/course/${course!.id}/assignment/${a.id}`)}
+                        <>
+                            {/* Create Assignment button */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                {!showCreateForm ? (
+                                    <Button onClick={() => setShowCreateForm(true)}>
+                                        + Create Assignment
+                                    </Button>
+                                ) : (
+                                    <form
+                                        onSubmit={handleCreateAssignment}
                                         style={{
-                                            display: 'flex', flexDirection: 'column', gap: '0.5rem',
-                                            position: 'relative', overflow: 'hidden', cursor: 'pointer',
-                                            transition: 'transform 0.15s, box-shadow 0.15s',
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)'
-                                            e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)'
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.transform = ''
-                                            e.currentTarget.style.boxShadow = ''
+                                            background: 'rgba(30, 41, 59, 0.7)',
+                                            border: '1px solid rgba(99, 102, 241, 0.3)',
+                                            borderRadius: '0.75rem',
+                                            padding: '1.5rem',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '1rem',
                                         }}
                                     >
-                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#6366f1' }} />
-                                        <div style={{ marginLeft: '0.75rem' }}>
-                                            <h3 className="course-title" style={{ fontSize: '1.05rem', marginBottom: '0.3rem' }}>
-                                                {a.title}
-                                            </h3>
-                                            {a.description && (
-                                                <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.4rem', lineHeight: '1.5' }}>
-                                                    {a.description.length > 120 ? a.description.slice(0, 120) + '…' : a.description}
-                                                </p>
-                                            )}
-                                            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: '#6b7280', flexWrap: 'wrap' }}>
-                                                {a.startDate && (
-                                                    <span>Start: {new Date(a.startDate).toLocaleDateString()}</span>
-                                                )}
-                                                {a.deadline && (
-                                                    <span style={{ color: '#f59e0b' }}>
-                                                        Deadline: {new Date(a.deadline).toLocaleDateString()}
-                                                    </span>
-                                                )}
+                                        <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 600, color: '#e5e7eb' }}>
+                                            New Assignment
+                                        </h3>
+
+                                        {createError && (
+                                            <div style={{
+                                                color: '#fca5a5', background: 'rgba(239, 68, 68, 0.1)',
+                                                border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '0.5rem',
+                                                padding: '0.75rem', fontSize: '0.9rem',
+                                            }}>
+                                                {createError}
+                                            </div>
+                                        )}
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                            <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Title *</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={newAssignment.title}
+                                                onChange={(e) => setNewAssignment((p) => ({ ...p, title: e.target.value }))}
+                                                placeholder="Assignment title"
+                                                style={{
+                                                    padding: '0.65rem 0.85rem', borderRadius: '0.5rem',
+                                                    border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(15, 23, 42, 0.6)',
+                                                    color: '#e5e7eb', fontSize: '0.95rem', outline: 'none',
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                            <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Description</label>
+                                            <textarea
+                                                rows={3}
+                                                value={newAssignment.description}
+                                                onChange={(e) => setNewAssignment((p) => ({ ...p, description: e.target.value }))}
+                                                placeholder="Brief description of the assignment"
+                                                style={{
+                                                    padding: '0.65rem 0.85rem', borderRadius: '0.5rem',
+                                                    border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(15, 23, 42, 0.6)',
+                                                    color: '#e5e7eb', fontSize: '0.95rem', outline: 'none', resize: 'vertical',
+                                                    fontFamily: 'inherit',
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                            <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Content / Instructions</label>
+                                            <textarea
+                                                rows={4}
+                                                value={newAssignment.content}
+                                                onChange={(e) => setNewAssignment((p) => ({ ...p, content: e.target.value }))}
+                                                placeholder="Detailed instructions for students"
+                                                style={{
+                                                    padding: '0.65rem 0.85rem', borderRadius: '0.5rem',
+                                                    border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(15, 23, 42, 0.6)',
+                                                    color: '#e5e7eb', fontSize: '0.95rem', outline: 'none', resize: 'vertical',
+                                                    fontFamily: 'inherit',
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1, minWidth: '200px' }}>
+                                                <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Start Date</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    value={newAssignment.startDate}
+                                                    onChange={(e) => setNewAssignment((p) => ({ ...p, startDate: e.target.value }))}
+                                                    style={{
+                                                        padding: '0.65rem 0.85rem', borderRadius: '0.5rem',
+                                                        border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(15, 23, 42, 0.6)',
+                                                        color: '#e5e7eb', fontSize: '0.95rem', outline: 'none',
+                                                        colorScheme: 'dark',
+                                                    }}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1, minWidth: '200px' }}>
+                                                <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Deadline</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    value={newAssignment.deadline}
+                                                    onChange={(e) => setNewAssignment((p) => ({ ...p, deadline: e.target.value }))}
+                                                    style={{
+                                                        padding: '0.65rem 0.85rem', borderRadius: '0.5rem',
+                                                        border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(15, 23, 42, 0.6)',
+                                                        color: '#e5e7eb', fontSize: '0.95rem', outline: 'none',
+                                                        colorScheme: 'dark',
+                                                    }}
+                                                />
                                             </div>
                                         </div>
-                                    </article>
-                                ))}
+
+                                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                                            <Button type="submit" disabled={creating || !newAssignment.title.trim()}>
+                                                {creating ? 'Creating…' : 'Create Assignment'}
+                                            </Button>
+                                            <Button variant="ghost" type="button" onClick={resetCreateForm} disabled={creating}>
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </form>
+                                )}
                             </div>
-                        )
-                    )}
+
+                            {assignments.length === 0 ? (
+                                <div className="courses-message">No assignments for this course yet.</div>
+                            ) : (
+                                <div className="courses-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                                    {assignments.map((a) => (
+                                        <article
+                                            key={a.id}
+                                            className="course-card"
+                                            onClick={() => navigate(`/course/${course!.id}/assignment/${a.id}`)}
+                                            style={{
+                                                display: 'flex', flexDirection: 'column', gap: '0.5rem',
+                                                position: 'relative', overflow: 'hidden', cursor: 'pointer',
+                                                transition: 'transform 0.15s, box-shadow 0.15s',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(-2px)'
+                                                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)'
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = ''
+                                                e.currentTarget.style.boxShadow = ''
+                                            }}
+                                        >
+                                            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#6366f1' }} />
+                                            <div style={{ marginLeft: '0.75rem' }}>
+                                                <h3 className="course-title" style={{ fontSize: '1.05rem', marginBottom: '0.3rem' }}>
+                                                    {a.title}
+                                                </h3>
+                                                {a.description && (
+                                                    <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.4rem', lineHeight: '1.5' }}>
+                                                        {a.description.length > 120 ? a.description.slice(0, 120) + '…' : a.description}
+                                                    </p>
+                                                )}
+                                                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: '#6b7280', flexWrap: 'wrap' }}>
+                                                    {a.startDate && (
+                                                        <span>Start: {new Date(a.startDate).toLocaleDateString()}</span>
+                                                    )}
+                                                    {a.deadline && (
+                                                        <span style={{ color: '#f59e0b' }}>
+                                                            Deadline: {new Date(a.deadline).toLocaleDateString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            )}
+                        </>)
+                    }
 
                     {/* Quizzes tab */}
                     {!tabLoading && teacherTab === 'quizzes' && (
