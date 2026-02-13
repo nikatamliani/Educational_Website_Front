@@ -18,12 +18,13 @@ export const QuizDetailsPage: React.FC = () => {
     const { user } = useAuth()
     const isTeacher = user?.role === 'teacher'
     const fromCourseId = (location.state as { fromCourseId?: number } | null)?.fromCourseId
+    const fromTab = (location.state as { fromTab?: string } | null)?.fromTab
 
     const goBack = () => {
         if (fromCourseId) {
             navigate(`/my-courses/${fromCourseId}`)
         } else {
-            navigate('/quizzes')
+            navigate('/quizzes', { state: { restoreTab: fromTab } })
         }
     }
 

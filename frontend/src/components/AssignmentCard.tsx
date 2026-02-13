@@ -37,7 +37,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment }) =>
     return (
         <article
             className="course-card"
-            onClick={() => assignment.status !== 'past_due' && navigate(`/assignment/${assignment.id}`)}
+            onClick={() => assignment.status !== 'past_due' && navigate(`/assignment/${assignment.id}`, { state: { fromTab: assignment.status } })}
             style={{
                 display: 'flex',
                 cursor: assignment.status === 'past_due' ? 'default' : 'pointer',

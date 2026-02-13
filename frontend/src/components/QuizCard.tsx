@@ -29,7 +29,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz }) => {
     return (
         <article
             className="course-card"
-            onClick={() => quiz.status !== 'past_due' && navigate(`/quiz/${quiz.id}`)}
+            onClick={() => quiz.status !== 'past_due' && navigate(`/quiz/${quiz.id}`, { state: { fromTab: quiz.status } })}
             style={{
                 display: 'flex',
                 cursor: quiz.status === 'past_due' ? 'default' : 'pointer',

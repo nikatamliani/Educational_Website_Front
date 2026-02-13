@@ -8,12 +8,13 @@ export const AssignmentDetailsPage: React.FC = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const fromCourseId = (location.state as { fromCourseId?: number } | null)?.fromCourseId
+    const fromTab = (location.state as { fromTab?: string } | null)?.fromTab
 
     const goBack = () => {
         if (fromCourseId) {
             navigate(`/my-courses/${fromCourseId}`)
         } else {
-            navigate('/assignments')
+            navigate('/assignments', { state: { restoreTab: fromTab } })
         }
     }
     const [assignment, setAssignment] = useState<Assignment | null>(null)

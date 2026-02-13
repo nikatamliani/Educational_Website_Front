@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { fetchStudentQuizzes, fetchTeacherQuizzes, type Quiz } from '../api/quizzes'
 import { QuizCard } from '../components/QuizCard'
 import { useAuth } from '../context/AuthContext'
@@ -9,11 +10,13 @@ import { useAuth } from '../context/AuthContext'
 export function QuizzesPage() {
     const { user } = useAuth()
     const isTeacher = user?.role === 'teacher'
+    const location = useLocation()
+    const restoreTab = (location.state as { restoreTab?: string } | null)?.restoreTab
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [activeTab, setActiveTab] = useState<string>('upcoming')
+    const [activeTab, setActiveTab] = useState<string>(restoreTab || 'upcoming')
 
     useEffect(() => {
         let isMounted = true

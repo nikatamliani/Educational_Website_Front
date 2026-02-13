@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
     fetchStudentAssignments,
     fetchTeacherSubmissions,
@@ -22,13 +23,15 @@ function studentFullName(firstName: string | null, lastName: string | null, fall
 export function AssignmentsPage() {
     const { user } = useAuth()
     const isTeacher = user?.role === 'teacher'
+    const location = useLocation()
+    const restoreTab = (location.state as { restoreTab?: string } | null)?.restoreTab
 
     const [studentAssignments, setStudentAssignments] = useState<Assignment[]>([])
     const [submissions, setSubmissions] = useState<AssignmentSubmissionResponse[]>([])
     const [results, setResults] = useState<AssignmentResultResponse[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [studentTab, setStudentTab] = useState<StudentTab>('upcoming')
+    const [studentTab, setStudentTab] = useState<StudentTab>((restoreTab as StudentTab) || 'upcoming')
     const [teacherTab, setTeacherTab] = useState<TeacherTab>('not_graded')
 
     // Grading modal state
