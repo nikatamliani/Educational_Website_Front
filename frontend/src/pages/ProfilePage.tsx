@@ -1,21 +1,28 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchMyProfile, updateMyProfile, UserProfile } from '../api/profile'
+import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/Button'
 
 export function ProfilePage() {
     const navigate = useNavigate()
+    const { user } = useAuth()
+    const role = user?.role ?? 'student'
 
     const [profile, setProfile] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    // Editable fields
+    // Shared editable fields
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [image, setImage] = useState('')
+
+    // Teacher-only fields
+    const [department, setDepartment] = useState('')
+    const [bio, setBio] = useState('')
 
     // Password change
     const [newPassword, setNewPassword] = useState('')
@@ -37,6 +44,10 @@ export function ProfilePage() {
                     setEmail(data.email ?? '')
                     setPhone(data.phoneNumber ?? '')
                     setImage(data.image ?? '')
+                    if (data._role === 'teacher') {
+                        setDepartment(data.department ?? '')
+                        setBio(data.bio ?? '')
+                    }
                 }
             } catch (err) {
                 if (mounted) setError(err instanceof Error ? err.message : 'Failed to load profile')
@@ -71,18 +82,24 @@ export function ProfilePage() {
             return
         }
 
+        const shared = {
+            id: profile.id,
+            username: profile.username,
+            firstName,
+            lastName,
+            email,
+            phoneNumber: phone,
+            image: image || null,
+            password: newPassword || undefined,
+        }
+
         setSaving(true)
         try {
-            await updateMyProfile({
-                id: profile.id,
-                username: profile.username,
-                firstName,
-                lastName,
-                email,
-                phoneNumber: phone,
-                image: image || null,
-                password: newPassword || undefined,
-            })
+            if (role === 'teacher') {
+                await updateMyProfile({ ...shared, department, bio }, 'teacher')
+            } else {
+                await updateMyProfile(shared, 'student')
+            }
             setSuccessMsg('Profile updated successfully!')
             setNewPassword('')
             setConfirmPassword('')
@@ -115,6 +132,11 @@ export function ProfilePage() {
         color: '#9ca3af',
         fontWeight: 500,
     }
+
+    const focusHandler = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+        e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'
+    const blurHandler = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+        e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'
 
     const initials = (profile.firstName?.[0] ?? '') + (profile.lastName?.[0] ?? '')
 
@@ -149,6 +171,18 @@ export function ProfilePage() {
                     </h1>
                     <p style={{ margin: '0.2rem 0 0', color: '#9ca3af', fontSize: '0.95rem' }}>
                         @{profile.username}
+                        <span style={{
+                            marginLeft: '0.75rem',
+                            fontSize: '0.75rem',
+                            padding: '0.15rem 0.5rem',
+                            borderRadius: '9999px',
+                            background: role === 'teacher' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                            color: role === 'teacher' ? '#c084fc' : '#93c5fd',
+                            fontWeight: 600,
+                            textTransform: 'capitalize',
+                        }}>
+                            {role}
+                        </span>
                     </p>
                 </div>
             </div>
@@ -165,61 +199,56 @@ export function ProfilePage() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                         <div>
                             <label style={labelStyle}>First Name</label>
-                            <input
-                                style={inputStyle}
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'}
-                                onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'}
-                            />
+                            <input style={inputStyle} value={firstName} onChange={(e) => setFirstName(e.target.value)} onFocus={focusHandler} onBlur={blurHandler} />
                         </div>
                         <div>
                             <label style={labelStyle}>Last Name</label>
-                            <input
-                                style={inputStyle}
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'}
-                                onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'}
-                            />
+                            <input style={inputStyle} value={lastName} onChange={(e) => setLastName(e.target.value)} onFocus={focusHandler} onBlur={blurHandler} />
                         </div>
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
                         <label style={labelStyle}>Email</label>
-                        <input
-                            type="email"
-                            style={inputStyle}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'}
-                            onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'}
-                        />
+                        <input type="email" style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} onFocus={focusHandler} onBlur={blurHandler} />
                     </div>
 
                     <div style={{ marginBottom: '1rem' }}>
                         <label style={labelStyle}>Phone Number</label>
-                        <input
-                            style={inputStyle}
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'}
-                            onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'}
-                        />
+                        <input style={inputStyle} value={phone} onChange={(e) => setPhone(e.target.value)} onFocus={focusHandler} onBlur={blurHandler} />
                     </div>
 
                     <div>
                         <label style={labelStyle}>Profile Image URL</label>
-                        <input
-                            style={inputStyle}
-                            value={image}
-                            onChange={(e) => setImage(e.target.value)}
-                            placeholder="https://example.com/avatar.jpg"
-                            onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'}
-                            onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'}
-                        />
+                        <input style={inputStyle} value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://example.com/avatar.jpg" onFocus={focusHandler} onBlur={blurHandler} />
                     </div>
                 </div>
+
+                {/* Teacher-only section */}
+                {role === 'teacher' && (
+                    <div style={{
+                        background: 'rgba(30, 41, 59, 0.6)', border: '1px solid rgba(148, 163, 184, 0.15)',
+                        borderRadius: '1rem', padding: '1.5rem', marginBottom: '1.5rem',
+                    }}>
+                        <h2 style={{ fontSize: '1.15rem', marginBottom: '1.25rem', color: '#e5e7eb' }}>Teaching Information</h2>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={labelStyle}>Department</label>
+                            <input style={inputStyle} value={department} onChange={(e) => setDepartment(e.target.value)} onFocus={focusHandler} onBlur={blurHandler} />
+                        </div>
+
+                        <div>
+                            <label style={labelStyle}>Bio</label>
+                            <textarea
+                                style={{ ...inputStyle, minHeight: '5rem', resize: 'vertical' }}
+                                value={bio}
+                                onChange={(e) => setBio(e.target.value)}
+                                onFocus={focusHandler}
+                                onBlur={blurHandler}
+                                placeholder="Tell students about yourself…"
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Password section */}
                 <div style={{
@@ -232,27 +261,11 @@ export function ProfilePage() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <div>
                             <label style={labelStyle}>New Password</label>
-                            <input
-                                type="password"
-                                style={inputStyle}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="••••••"
-                                onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'}
-                                onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'}
-                            />
+                            <input type="password" style={inputStyle} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••" onFocus={focusHandler} onBlur={blurHandler} />
                         </div>
                         <div>
                             <label style={labelStyle}>Confirm Password</label>
-                            <input
-                                type="password"
-                                style={inputStyle}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="••••••"
-                                onFocus={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.6)'}
-                                onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.25)'}
-                            />
+                            <input type="password" style={inputStyle} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••" onFocus={focusHandler} onBlur={blurHandler} />
                         </div>
                     </div>
                 </div>
