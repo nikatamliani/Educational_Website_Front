@@ -39,6 +39,9 @@ export const Navbar: React.FC = () => {
                         <Link to="/quizzes" className={getLinkClass('/quizzes')}>
                             Quizzes
                         </Link>
+                        <Link to="/grades" className={getLinkClassStartsWith('/grades')}>
+                            Grades
+                        </Link>
                     </>
                 )}
                 {isAuthenticated ? (
