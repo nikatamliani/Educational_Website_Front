@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchCourseById, fetchMyCourses, fetchTeacherCourses } from '../api/courses'
-import { fetchAssignmentsByCourseId, createAssignment, type CourseAssignment, type CreateAssignmentPayload } from '../api/assignments'
+import { fetchAssignmentsByCourseId, createAssignment, deleteAssignment, type CourseAssignment, type CreateAssignmentPayload } from '../api/assignments'
 import { fetchQuizzesByCourseId, type CourseQuiz } from '../api/quizzes'
 import { enrollInCourse, deleteCourse, type Course } from '../api/courses'
 import { Button } from '../components/Button'
@@ -186,6 +186,21 @@ export function CourseDetailsPage() {
         setShowCreateForm(false)
         setCreateError(null)
         setNewAssignment({ courseId: 0, title: '', description: '', content: '', startDate: '', deadline: '' })
+    }
+
+    const handleDeleteAssignment = async (e: React.MouseEvent, assignmentId: number) => {
+        e.stopPropagation() // Prevent card click
+        if (!window.confirm('Are you sure you want to delete this assignment?')) return
+
+        try {
+            await deleteAssignment(assignmentId)
+            // Refresh list
+            const data = await fetchAssignmentsByCourseId(course!.id)
+            setAssignments(data)
+        } catch (err) {
+            console.error(err)
+            alert('Failed to delete assignment')
+        }
     }
 
     if (loading) return <div className="page-container"><div className="courses-message">Loading...</div></div>
@@ -472,6 +487,24 @@ export function CourseDetailsPage() {
                                                             Deadline: {new Date(a.deadline).toLocaleDateString()}
                                                         </span>
                                                     )}
+                                                </div>
+
+                                                <div style={{ marginTop: '0.8rem', display: 'flex', justifyContent: 'flex-end' }}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={(e) => handleDeleteAssignment(e, a.id)}
+                                                        style={{
+                                                            color: '#ef4444',
+                                                            padding: '0.3rem 0.6rem',
+                                                            fontSize: '0.85rem',
+                                                            height: 'auto',
+                                                            borderColor: 'rgba(239, 68, 68, 0.3)',
+                                                            borderWidth: '1px',
+                                                            borderStyle: 'solid'
+                                                        }}
+                                                    >
+                                                        Delete
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </article>

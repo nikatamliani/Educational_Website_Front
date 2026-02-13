@@ -190,6 +190,18 @@ export async function createAssignment(payload: CreateAssignmentPayload): Promis
     })
 }
 
+export async function deleteAssignment(assignmentId: number): Promise<void> {
+    const token = localStorage.getItem('authToken')
+    if (!token) throw new Error('You must be logged in as a teacher to delete assignments.')
+
+    await request<void>(`/api/assignment/${assignmentId}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
+}
+
 // Existing DTO shapes returned by backend
 export interface AssignmentSubmissionResponse {
     assignmentId: number
