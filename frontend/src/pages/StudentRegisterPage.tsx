@@ -1,6 +1,8 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { registerStudent } from '../api/auth'
+import { Input } from '../components/Input'
+import { Button } from '../components/Button'
 
 export function StudentRegisterPage() {
   const navigate = useNavigate()
@@ -65,87 +67,66 @@ export function StudentRegisterPage() {
 
       <form className="form" onSubmit={handleSubmit}>
         <div className="form-grid">
-          <label className="form-field">
-            <span className="form-label">Username *</span>
-            <input
-              type="text"
-              className="form-input"
-              value={form.username}
-              onChange={(e) => updateField('username', e.target.value)}
-            />
-          </label>
-
-          <label className="form-field">
-            <span className="form-label">Password *</span>
-            <input
-              type="password"
-              className="form-input"
-              value={form.password}
-              onChange={(e) => updateField('password', e.target.value)}
-            />
-          </label>
-        </div>
-
-        <div className="form-grid">
-          <label className="form-field">
-            <span className="form-label">First name *</span>
-            <input
-              type="text"
-              className="form-input"
-              value={form.firstName}
-              onChange={(e) => updateField('firstName', e.target.value)}
-            />
-          </label>
-
-          <label className="form-field">
-            <span className="form-label">Last name</span>
-            <input
-              type="text"
-              className="form-input"
-              value={form.lastName}
-              onChange={(e) => updateField('lastName', e.target.value)}
-            />
-          </label>
-        </div>
-
-        <div className="form-grid">
-          <label className="form-field">
-            <span className="form-label">Email *</span>
-            <input
-              type="email"
-              className="form-input"
-              value={form.email}
-              onChange={(e) => updateField('email', e.target.value)}
-            />
-          </label>
-
-          <label className="form-field">
-            <span className="form-label">Phone</span>
-            <input
-              type="tel"
-              className="form-input"
-              value={form.phoneNumber}
-              onChange={(e) => updateField('phoneNumber', e.target.value)}
-            />
-          </label>
-        </div>
-
-        <label className="form-field">
-          <span className="form-label">Profile image URL</span>
-          <input
-            type="url"
-            className="form-input"
-            value={form.image}
-            onChange={(e) => updateField('image', e.target.value)}
+          <Input
+            label="Username *"
+            type="text"
+            value={form.username}
+            onChange={(e) => updateField('username', e.target.value)}
           />
-        </label>
+
+          <Input
+            label="Password *"
+            type="password"
+            value={form.password}
+            onChange={(e) => updateField('password', e.target.value)}
+          />
+        </div>
+
+        <div className="form-grid">
+          <Input
+            label="First name *"
+            type="text"
+            value={form.firstName}
+            onChange={(e) => updateField('firstName', e.target.value)}
+          />
+
+          <Input
+            label="Last name"
+            type="text"
+            value={form.lastName}
+            onChange={(e) => updateField('lastName', e.target.value)}
+          />
+        </div>
+
+        <div className="form-grid">
+          <Input
+            label="Email *"
+            type="email"
+            value={form.email}
+            onChange={(e) => updateField('email', e.target.value)}
+          />
+
+          <Input
+            label="Phone"
+            type="tel"
+            value={form.phoneNumber}
+            onChange={(e) => updateField('phoneNumber', e.target.value)}
+          />
+        </div>
+
+        <Input
+          label="Profile image URL"
+          type="url"
+          value={form.image}
+          onChange={(e) => updateField('image', e.target.value)}
+        />
 
         {error && <div className="form-error">{error}</div>}
         {success && <div className="form-success">{success}</div>}
 
-        <button className="btn btn-primary" type="submit" disabled={loading}>
-          {loading ? 'Creating account…' : 'Register as student'}
-        </button>
+        <Button type="submit" isLoading={loading}>
+          Register as student
+        </Button>
       </form>
     </div>
   )

@@ -1,0 +1,79 @@
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2.5rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+    backdrop-filter: blur(16px);
+    background: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.7));
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.app-logo-circle {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 20%, #38bdf8, #6366f1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #f9fafb;
+    box-shadow:
+        0 10px 25px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(148, 163, 184, 0.3);
+}
+
+.app-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.app-subtitle {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.app-nav {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.95rem;
+}
+
+.nav-link {
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    color: #e5e7eb;
+    border: 1px solid transparent;
+    text-decoration: none;
+    transition:
+        background-color 150ms ease,
+        color 150ms ease,
+        border-color 150ms ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(30, 64, 175, 0.45);
+    border-color: rgba(129, 140, 248, 0.8);
+}
+
+.nav-link-active {
+    background: linear-gradient(to right, #2563eb, #4f46e5);
+    border-color: transparent;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+}
+
+@media (max-width: 640px) {
+    .app-header {
+        padding-inline: 1.25rem;
+    }
+}

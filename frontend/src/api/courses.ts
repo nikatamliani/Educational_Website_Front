@@ -11,8 +11,28 @@ export interface Course {
 }
 
 export async function fetchAllCourses(): Promise<Course[]> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   return request<Course[]>('/api/course/all', {
     method: 'GET',
+    headers,
+  })
+}
+
+export async function fetchCourseById(id: number): Promise<Course> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  return request<Course>(`/api/course/${id}`, {
+    method: 'GET',
+    headers,
   })
 }
 
@@ -32,3 +52,11 @@ export async function fetchMyCourses(): Promise<Course[]> {
   })
 }
 
+export async function enrollInCourse(courseId: number): Promise<void> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+
+  return request<void>(`/api/course/${courseId}/enroll`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+}

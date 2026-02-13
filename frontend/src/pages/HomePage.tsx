@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAllCourses, type Course } from '../api/courses'
+import { useAuth } from '../context/AuthContext'
+import { CourseCard } from '../components/CourseCard'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -8,10 +10,8 @@ export function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const username =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('authUsername') ?? 'Student'
-      : 'Student'
+  const { user, isAuthenticated } = useAuth()
+  const username = user?.username ?? 'Student'
 
   useEffect(() => {
     let isMounted = true
@@ -55,35 +55,28 @@ export function HomePage() {
     [courses],
   )
 
+  if (!isAuthenticated) {
+    return (
+      <div className="auth-card">
+        <h1 className="auth-title">Welcome to Educational Website</h1>
+        <p className="auth-description">
+          Please log in or sign up to view courses.
+        </p>
+        <div className="home-actions">
+          <button className="btn btn-primary" onClick={() => navigate('/login')}>Login</button>
+          <button className="btn btn-outline" onClick={() => navigate('/register/student')}>Sign up</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="auth-card">
-      <h1 className="auth-title">Welcome back, {username}</h1>
-      <p className="auth-description">
+    <div className="width-full">
+      <h1 className="page-title">Welcome back, {username}</h1>
+      <p className="page-description">
         Here is an overview of available courses. Use the navigation to explore
         your courses, assignments, quizzes and upcoming schedule.
       </p>
-
-      <div className="student-nav">
-        <button className="student-nav-item student-nav-item-active" type="button">
-          Courses
-        </button>
-        <button
-          className="student-nav-item"
-          type="button"
-          onClick={() => navigate('/my-courses')}
-        >
-          My courses
-        </button>
-        <button className="student-nav-item" type="button">
-          Assignments
-        </button>
-        <button className="student-nav-item" type="button">
-          Quizzes
-        </button>
-        <button className="student-nav-item" type="button">
-          Calendar
-        </button>
-      </div>
 
       <div className="courses-section">
         {loading && <div className="courses-message">Loading courses…</div>}
@@ -97,35 +90,7 @@ export function HomePage() {
         {!loading && !error && sortedCourses.length > 0 && (
           <div className="courses-grid">
             {sortedCourses.map((course) => (
-              <article key={course.id} className="course-card">
-                <h2 className="course-title">{course.title}</h2>
-                {course.description && (
-                  <p className="course-description">{course.description}</p>
-                )}
-
-                <div className="course-meta">
-                  {course.price != null && (
-                    <span className="course-pill">
-                      {course.price === 0 ? 'Free' : `$${course.price.toFixed(2)}`}
-                    </span>
-                  )}
-                  {course.duration != null && (
-                    <span className="course-pill">
-                      Duration: {course.duration} hours
-                    </span>
-                  )}
-                  {course.startDate && (
-                    <span className="course-pill">
-                      Starts{' '}
-                        {new Date(course.startDate).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                    </span>
-                  )}
-                </div>
-              </article>
+              <CourseCard key={course.id} course={course} />
             ))}
           </div>
         )}

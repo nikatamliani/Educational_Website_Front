@@ -1,9 +1,12 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login } from '../api/auth'
+import { useAuth } from '../context/AuthContext'
+import { Input } from '../components/Input'
+import { Button } from '../components/Button'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,12 +23,7 @@ export function LoginPage() {
 
     try {
       setLoading(true)
-      const result = await login({ username, password })
-
-      localStorage.setItem('authToken', result.token)
-      localStorage.setItem('authUsername', result.username)
-      localStorage.setItem('authRoles', JSON.stringify(result.roles ?? []))
-
+      await login(username, password)
       navigate('/')
     } catch (err) {
       const message =
@@ -44,33 +42,27 @@ export function LoginPage() {
       </p>
 
       <form className="form" onSubmit={handleSubmit}>
-        <label className="form-field">
-          <span className="form-label">Username</span>
-          <input
-            type="text"
-            className="form-input"
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </label>
+        <Input
+          label="Username"
+          type="text"
+          autoComplete="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
 
-        <label className="form-field">
-          <span className="form-label">Password</span>
-          <input
-            type="password"
-            className="form-input"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
+        <Input
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
         {error && <div className="form-error">{error}</div>}
 
-        <button className="btn btn-primary" type="submit" disabled={loading}>
-          {loading ? 'Signing in…' : 'Login'}
-        </button>
+        <Button type="submit" isLoading={loading} className="w-full">
+          Login
+        </Button>
       </form>
     </div>
   )
