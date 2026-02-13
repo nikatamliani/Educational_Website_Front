@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { fetchMyProfile } from '../api/profile';
 import './Navbar.css';
 
 export const Navbar: React.FC = () => {
@@ -8,6 +9,7 @@ export const Navbar: React.FC = () => {
     const navigate = useNavigate();
     const { user, isAuthenticated, logout } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const getLinkClass = (path: string) => {
@@ -28,6 +30,14 @@ export const Navbar: React.FC = () => {
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    // Fetch avatar image
+    useEffect(() => {
+        if (!isAuthenticated) { setAvatarUrl(null); return; }
+        fetchMyProfile()
+            .then((p) => setAvatarUrl(p.image || null))
+            .catch(() => setAvatarUrl(null));
+    }, [isAuthenticated]);
 
     const initials = user?.username?.slice(0, 2).toUpperCase() ?? '?';
 
@@ -82,15 +92,26 @@ export const Navbar: React.FC = () => {
                                 if (!dropdownOpen) e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.2)';
                             }}
                         >
-                            <span style={{
-                                width: '2rem', height: '2rem', borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '0.75rem', fontWeight: 700, color: '#fff',
-                                flexShrink: 0,
-                            }}>
-                                {initials}
-                            </span>
+                            {avatarUrl ? (
+                                <img
+                                    src={avatarUrl}
+                                    alt="Avatar"
+                                    style={{
+                                        width: '2rem', height: '2rem', borderRadius: '50%',
+                                        objectFit: 'cover', flexShrink: 0,
+                                    }}
+                                />
+                            ) : (
+                                <span style={{
+                                    width: '2rem', height: '2rem', borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '0.75rem', fontWeight: 700, color: '#fff',
+                                    flexShrink: 0,
+                                }}>
+                                    {initials}
+                                </span>
+                            )}
                             <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {user?.username}
                             </span>
