@@ -268,14 +268,30 @@ export function CourseDetailsPage() {
 
     return (
         <div className="page-container">
-            <Button
+            <button
                 onClick={() => navigate(-1)}
-                variant="ghost"
-                className="mb-4"
-                style={{ paddingLeft: 0, marginTop: '2rem' }}
+                style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.95rem',
+                    padding: '0.5rem 0',
+                    marginBottom: '1.5rem',
+                    marginTop: '2rem',
+                    transition: 'color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#e5e7eb'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
             >
-                ← Back
-            </Button>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                Back
+            </button>
 
             {/* Course Info / Edit Form */}
             {isEditingCourse && course ? (
@@ -291,7 +307,7 @@ export function CourseDetailsPage() {
                 </div>
             ) : (
                 <div className="course-header">
-                    <h1 className="course-title">{course.title}</h1>
+                    <h1 className="course-title" style={{ fontSize: '3rem', fontWeight: '800', letterSpacing: '-0.025em', marginBottom: '1rem', lineHeight: '1.1' }}>{course.title}</h1>
 
                     {isOwnCourse && ( // Changed from isTeacher to isOwnCourse for accuracy
                         <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
