@@ -55,24 +55,26 @@ export const Navbar: React.FC = () => {
         }
 
         if (role === 'teacher') {
-            // Teacher: Courses, My Courses, Assignments, Quizzes
+            // Teacher: Courses, My Courses, Assignments, Quizzes, Calendar
             return (
                 <>
                     <Link to="/" className={linkCls('/')}>Courses</Link>
                     <Link to="/my-courses" className={linkClsStartsWith('/my-courses')}>My Courses</Link>
                     <Link to="/assignments" className={linkClsStartsWith('/assignment')}>Assignments</Link>
                     <Link to="/quizzes" className={linkClsStartsWith('/quiz')}>Quizzes</Link>
+                    <Link to="/calendar" className={linkCls('/calendar')}>Calendar</Link>
                 </>
             );
         }
 
-        // Student: Courses, My Courses, Assignments, Quizzes, Grades
+        // Student: Courses, My Courses, Assignments, Quizzes, Calendar, Grades
         return (
             <>
                 <Link to="/" className={linkCls('/')}>Courses</Link>
                 <Link to="/my-courses" className={linkClsStartsWith('/my-courses')}>My Courses</Link>
                 <Link to="/assignments" className={linkClsStartsWith('/assignment')}>Assignments</Link>
                 <Link to="/quizzes" className={linkClsStartsWith('/quiz')}>Quizzes</Link>
+                <Link to="/calendar" className={linkCls('/calendar')}>Calendar</Link>
                 <Link to="/grades" className={linkClsStartsWith('/grades')}>Grades</Link>
             </>
         );

@@ -20,6 +20,7 @@ import { MyCoursesPage } from './pages/MyCoursesPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { QuizManagementPage } from './pages/QuizManagementPage'
 import { QuizTakingPage } from './pages/QuizTakingPage'
+import { CalendarPage } from './pages/CalendarPage'
 
 function AppLayout() {
   return (
@@ -48,6 +49,7 @@ function AppLayout() {
           <Route path="/course/:courseId/assignment/:assignmentId" element={<ProtectedRoute><CourseAssignmentPage /></ProtectedRoute>} />
           <Route path="/course/:courseId/quiz/:quizId/edit" element={<ProtectedRoute><QuizManagementPage /></ProtectedRoute>} />
           <Route path="/course/:courseId/quiz/:quizId/take" element={<ProtectedRoute><QuizTakingPage /></ProtectedRoute>} />
+          <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes >
