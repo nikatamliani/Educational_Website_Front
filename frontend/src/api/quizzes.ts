@@ -34,6 +34,7 @@ export interface QuizQuestionSubmissionDto {
 export interface QuizSubmissionDto {
     id: number
     studentId: number
+    studentName?: string
     quizId: number
     questionSubmissions: QuizQuestionSubmissionDto[]
     submittedAt: string // ISO datetime
@@ -157,8 +158,11 @@ export async function fetchTeacherQuizzes(): Promise<Quiz[]> {
 
                     for (const dto of courseQuizzes) {
                         const now = new Date()
+                        const startDate = new Date(dto.startDate)
                         const endDate = new Date(dto.endDate)
-                        const status: QuizStatus = endDate < now ? 'returned' : 'upcoming'
+                        // Upcoming = startDate > now (quiz hasn't started)
+                        // Returned (graded) = endDate < now (quiz has ended)
+                        const status: QuizStatus = startDate > now ? 'upcoming' : endDate < now ? 'returned' : 'upcoming'
 
                         allQuizzes.push({
                             id: dto.id,
@@ -243,6 +247,19 @@ export async function fetchMyQuizSubmission(
         )
     } catch {
         return null
+    }
+}
+
+export async function fetchAllQuizSubmissions(
+    quizId: number
+): Promise<QuizSubmissionDto[]> {
+    try {
+        return await request<QuizSubmissionDto[]>(
+            `/api/quiz/${quizId}/submissions`,
+            { method: 'GET', headers: authHeaders() }
+        )
+    } catch {
+        return []
     }
 }
 

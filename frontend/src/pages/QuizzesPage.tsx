@@ -67,7 +67,7 @@ export function QuizzesPage() {
                     className={`student-nav-item ${activeTab === 'returned' ? 'student-nav-item-active' : ''}`}
                     onClick={() => setActiveTab('returned')}
                 >
-                    Returned
+                    {isTeacher ? 'Graded' : 'Returned'}
                 </button>
                 {!isTeacher && (
                     <button
