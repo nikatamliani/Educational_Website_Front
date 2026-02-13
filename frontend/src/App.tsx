@@ -4,6 +4,7 @@ import { Navbar } from './components/Navbar'
 import { Footer } from './components/Footer'
 import { HomePage } from './pages/HomePage'
 import { CourseDetailsPage } from './pages/CourseDetailsPage'
+import { EnrolledCoursePage } from './pages/EnrolledCoursePage'
 import { AssignmentsPage } from './pages/AssignmentsPage'
 import { AssignmentDetailsPage } from './pages/AssignmentDetailsPage'
 import { QuizzesPage } from './pages/QuizzesPage'
@@ -23,6 +24,7 @@ function AppLayout() {
           <Route path="/" element={<HomePage />} />
           <Route path="/course/:id" element={<CourseDetailsPage />} />
           <Route path="/my-courses" element={<MyCoursesPage />} />
+          <Route path="/my-courses/:id" element={<EnrolledCoursePage />} />
           <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/assignment/:id" element={<AssignmentDetailsPage />} />
           <Route path="/quizzes" element={<QuizzesPage />} />

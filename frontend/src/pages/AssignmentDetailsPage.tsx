@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { fetchAssignmentById, submitAssignment, Assignment } from '../api/assignments'
 import { Button } from '../components/Button'
 
 export const AssignmentDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
+    const location = useLocation()
+    const fromCourseId = (location.state as { fromCourseId?: number } | null)?.fromCourseId
+
+    const goBack = () => {
+        if (fromCourseId) {
+            navigate(`/my-courses/${fromCourseId}`)
+        } else {
+            navigate('/assignments')
+        }
+    }
     const [assignment, setAssignment] = useState<Assignment | null>(null)
     const [loading, setLoading] = useState(true)
     const [submissionContent, setSubmissionContent] = useState('')
@@ -25,6 +35,15 @@ export const AssignmentDetailsPage: React.FC = () => {
 
         loadAssignment()
     }, [id])
+
+    // ESC key → go back
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') goBack()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    })
 
     const handleSubmit = async () => {
         if (!assignment || !submissionContent.trim()) return
@@ -68,7 +87,7 @@ export const AssignmentDetailsPage: React.FC = () => {
             <div className="container" style={{ padding: '2rem', textAlign: 'center', color: 'white' }}>
                 Assignment not found.
                 <br />
-                <Button onClick={() => navigate('/assignments')}>Back to Assignments</Button>
+                <Button onClick={goBack}>Back</Button>
             </div>
         )
     }
@@ -76,10 +95,10 @@ export const AssignmentDetailsPage: React.FC = () => {
     return (
         <div className="container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
             <Button
-                onClick={() => navigate('/assignments')}
+                onClick={goBack}
                 style={{ marginBottom: '1rem', background: 'transparent', border: '1px solid #374151' }}
             >
-                ← Back to List
+                ← {fromCourseId ? 'Back to Course' : 'Back to List'}
             </Button>
 
             <div className="card" style={{ padding: '2rem', backgroundColor: '#1f2937', borderRadius: '0.75rem', border: '1px solid #374151' }}>

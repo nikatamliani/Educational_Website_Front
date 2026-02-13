@@ -5,11 +5,12 @@ import './CourseCard.css';
 
 interface CourseCardProps {
     course: Course;
+    basePath?: string;
 }
 
-export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+export const CourseCard: React.FC<CourseCardProps> = ({ course, basePath = '/course/' }) => {
     return (
-        <Link to={`/course/${course.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Link to={`${basePath}${course.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', height: '100%' }}>
             <article className="course-card">
                 <h2 className="course-title">{course.title}</h2>
 

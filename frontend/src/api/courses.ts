@@ -76,3 +76,12 @@ export async function enrollInCourse(courseId: number): Promise<void> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
 }
+
+export async function unenrollFromCourse(courseId: number): Promise<void> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+
+  return request<void>(`/api/course/${courseId}/unenroll`, {
+    method: 'DELETE',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+}

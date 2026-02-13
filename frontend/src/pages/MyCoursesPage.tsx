@@ -79,7 +79,7 @@ export function MyCoursesPage() {
         {!loading && !error && sortedCourses.length > 0 && (
           <div className="courses-grid">
             {sortedCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard key={course.id} course={course} basePath={isTeacher ? '/course/' : '/my-courses/'} />
             ))}
           </div>
         )}

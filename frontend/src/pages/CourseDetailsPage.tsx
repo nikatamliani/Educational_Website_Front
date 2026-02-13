@@ -34,13 +34,11 @@ export function CourseDetailsPage() {
 
                 if (isAuthenticated) {
                     if (isTeacher) {
-                        // For teachers, check if this is their course
                         const teacherCourses = await fetchTeacherCourses()
                         if (isMounted) {
                             setIsOwnCourse(teacherCourses.some((c) => c.id === courseData.id))
                         }
                     } else {
-                        // For students, check enrollment
                         const myCourses = await fetchMyCourses()
                         if (isMounted) {
                             setIsEnrolled(myCourses.some((c) => c.id === courseData.id))
