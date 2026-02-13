@@ -85,3 +85,18 @@ export async function unenrollFromCourse(courseId: number): Promise<void> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
 }
+
+export async function deleteCourse(id: number): Promise<void> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+
+  if (!token) {
+    throw new Error('You must be logged in to delete a course.')
+  }
+
+  return request<void>(`/api/course/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}

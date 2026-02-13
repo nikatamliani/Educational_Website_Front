@@ -136,6 +136,28 @@ export async function fetchStudentAssignments(): Promise<Assignment[]> {
     }
 }
 
+// ─── Teacher: fetch assignments for a specific course ───
+export interface CourseAssignment {
+    id: number
+    courseId: number
+    title: string
+    description: string | null
+    content: string | null
+    startDate: string | null
+    deadline: string | null
+}
+
+export async function fetchAssignmentsByCourseId(courseId: number): Promise<CourseAssignment[]> {
+    const token = localStorage.getItem('authToken')
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    return await request<CourseAssignment[]>(`/api/assignment/course/${courseId}`, {
+        method: 'GET',
+        headers,
+    })
+}
+
 // Existing DTO shapes returned by backend
 export interface AssignmentSubmissionResponse {
     assignmentId: number
