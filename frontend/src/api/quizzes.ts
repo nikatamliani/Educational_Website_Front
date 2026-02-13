@@ -28,6 +28,7 @@ export interface QuizQuestionSubmissionDto {
     questionId: number
     selectedOption: string
     correct: boolean
+    correctOption?: string
 }
 
 export interface QuizSubmissionDto {
@@ -213,5 +214,49 @@ export async function fetchQuizzesByCourseId(courseId: number): Promise<CourseQu
     return await request<CourseQuiz[]>(`/api/quiz/course/${courseId}`, {
         method: 'GET',
         headers,
+    })
+}
+
+export async function saveQuiz(quiz: Partial<QuizDto>): Promise<QuizDto> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+    return request<QuizDto>('/api/quiz/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(quiz),
+    })
+}
+
+export async function deleteQuiz(id: number): Promise<void> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+    await request<void>(`/api/quiz/${id}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
+}
+
+export async function saveQuestion(question: Partial<QuizQuestionDto>): Promise<QuizQuestionDto> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+    return request<QuizQuestionDto>('/api/quiz/questions/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(question),
+    })
+}
+
+export async function deleteQuestion(id: number): Promise<void> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+    await request<void>(`/api/quiz/questions/${id}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
     })
 }

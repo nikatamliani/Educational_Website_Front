@@ -17,10 +17,11 @@ import {
     type CourseAssignment,
     type CreateAssignmentPayload,
 } from '../api/assignments'
-import { fetchQuizzesByCourseId, type CourseQuiz } from '../api/quizzes'
+import { fetchQuizzesByCourseId, saveQuiz, type CourseQuiz, type QuizDto } from '../api/quizzes'
 import { Button } from '../components/Button'
 import { useAuth } from '../context/AuthContext'
-import { CourseForm } from '../components/CourseForm' // Added CourseForm
+import { CourseForm } from '../components/CourseForm'
+import { QuizForm } from '../components/QuizForm'
 
 type TeacherCourseTab = 'assignments' | 'quizzes'
 
@@ -56,6 +57,11 @@ export function CourseDetailsPage() {
         startDate: '',
         deadline: '',
     })
+
+    // Quiz Creation State
+    const [showQuizForm, setShowQuizForm] = useState(false)
+    const [creatingQuiz, setCreatingQuiz] = useState(false)
+    const [createQuizError, setCreateQuizError] = useState<string | null>(null)
 
     // Edit Course State
     const [isEditingCourse, setIsEditingCourse] = useState(false)
@@ -260,6 +266,34 @@ export function CourseDetailsPage() {
         } catch (err) {
             console.error(err)
             alert('Failed to delete assignment')
+        }
+    }
+
+
+
+    const handleCreateQuiz = async (data: Partial<QuizDto>) => {
+        if (!course) return
+        try {
+            setCreatingQuiz(true)
+            setCreateQuizError(null)
+            await saveQuiz({ ...data, courseId: course.id })
+
+            // Refresh
+            const quizData = await fetchQuizzesByCourseId(course.id)
+            setQuizzes(quizData)
+            setShowQuizForm(false)
+        } catch (err) {
+            setCreateQuizError('Failed to create quiz')
+        } finally {
+            setCreatingQuiz(false)
+        }
+    }
+
+    const handleQuizClick = (quizId: number) => {
+        if (isOwnCourse) {
+            navigate(`/course/${course?.id}/quiz/${quizId}/edit`)
+        } else {
+            navigate(`/course/${course?.id}/quiz/${quizId}/take`)
         }
     }
 
@@ -628,36 +662,66 @@ export function CourseDetailsPage() {
 
                     {/* Quizzes tab */}
                     {!tabLoading && teacherTab === 'quizzes' && (
-                        quizzes.length === 0 ? (
-                            <div className="courses-message">No quizzes for this course yet.</div>
-                        ) : (
-                            <div className="courses-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-                                {quizzes.map((q) => (
-                                    <article
-                                        key={q.id}
-                                        className="course-card"
-                                        style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', position: 'relative', overflow: 'hidden' }}
-                                    >
-                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#8b5cf6' }} />
-                                        <div style={{ marginLeft: '0.75rem' }}>
-                                            <h3 className="course-title" style={{ fontSize: '1.05rem', marginBottom: '0.3rem' }}>
-                                                {q.title}
-                                            </h3>
-                                            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: '#6b7280', flexWrap: 'wrap' }}>
-                                                {q.startDate && (
-                                                    <span>Start: {new Date(q.startDate).toLocaleDateString()}</span>
-                                                )}
-                                                {q.endDate && (
-                                                    <span style={{ color: '#f59e0b' }}>
-                                                        End: {new Date(q.endDate).toLocaleDateString()}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </article>
-                                ))}
+                        <>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                {!showQuizForm ? (
+                                    <Button onClick={() => setShowQuizForm(true)}>
+                                        + Create Quiz
+                                    </Button>
+                                ) : (
+                                    <QuizForm
+                                        onSubmit={handleCreateQuiz}
+                                        onCancel={() => setShowQuizForm(false)}
+                                        isLoading={creatingQuiz}
+                                        error={createQuizError}
+                                    />
+                                )}
                             </div>
-                        )
+
+                            {quizzes.length === 0 ? (
+                                <div className="courses-message">No quizzes for this course yet.</div>
+                            ) : (
+                                <div className="courses-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                                    {quizzes.map((q) => (
+                                        <article
+                                            key={q.id}
+                                            className="course-card"
+                                            onClick={() => handleQuizClick(q.id)}
+                                            style={{
+                                                display: 'flex', flexDirection: 'column', gap: '0.5rem',
+                                                position: 'relative', overflow: 'hidden', cursor: 'pointer',
+                                                transition: 'transform 0.15s, box-shadow 0.15s'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(-2px)'
+                                                e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)'
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = ''
+                                                e.currentTarget.style.boxShadow = ''
+                                            }}
+                                        >
+                                            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#8b5cf6' }} />
+                                            <div style={{ marginLeft: '0.75rem' }}>
+                                                <h3 className="course-title" style={{ fontSize: '1.05rem', marginBottom: '0.3rem' }}>
+                                                    {q.title}
+                                                </h3>
+                                                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: '#6b7280', flexWrap: 'wrap' }}>
+                                                    {q.startDate && (
+                                                        <span>Start: {new Date(q.startDate).toLocaleDateString()}</span>
+                                                    )}
+                                                    {q.endDate && (
+                                                        <span style={{ color: '#f59e0b' }}>
+                                                            End: {new Date(q.endDate).toLocaleDateString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             )}
