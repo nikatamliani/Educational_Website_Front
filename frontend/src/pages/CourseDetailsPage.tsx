@@ -292,7 +292,6 @@ export function CourseDetailsPage() {
             ) : (
                 <div className="course-header">
                     <h1 className="course-title">{course.title}</h1>
-                    <p className="course-description">{course.description}</p>
 
                     {isOwnCourse && ( // Changed from isTeacher to isOwnCourse for accuracy
                         <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
@@ -354,14 +353,6 @@ export function CourseDetailsPage() {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             <Button variant="outline" className="full-width" disabled>
                                                 Your Course
-                                            </Button>
-                                            <Button
-                                                className="full-width"
-                                                variant="outline"
-                                                onClick={handleDeleteCourse}
-                                                style={{ borderColor: '#ef4444', color: '#ef4444' }}
-                                            >
-                                                Delete Course
                                             </Button>
                                         </div>
                                     ) : (
