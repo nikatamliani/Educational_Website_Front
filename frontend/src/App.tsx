@@ -16,6 +16,7 @@ import { LoginPage } from './pages/LoginPage'
 import { StudentRegisterPage } from './pages/StudentRegisterPage'
 import { TeacherRegisterPage } from './pages/TeacherRegisterPage'
 import { MyCoursesPage } from './pages/MyCoursesPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 function AppLayout() {
   return (
@@ -34,6 +35,7 @@ function AppLayout() {
           <Route path="/quiz/:id" element={<QuizDetailsPage />} />
           <Route path="/grades" element={<GradesPage />} />
           <Route path="/grades/:id" element={<CourseGradesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/course/:courseId/assignment/:assignmentId" element={<CourseAssignmentPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register/student" element={<StudentRegisterPage />} />
