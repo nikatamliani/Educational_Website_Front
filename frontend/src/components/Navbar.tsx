@@ -12,13 +12,13 @@ export const Navbar: React.FC = () => {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const getLinkClass = (path: string) => {
-        return location.pathname === path ? 'nav-link nav-link-active' : 'nav-link';
-    };
+    const role = user?.role; // 'student' | 'teacher' | undefined
 
-    const getLinkClassStartsWith = (path: string) => {
-        return location.pathname.startsWith(path) ? 'nav-link nav-link-active' : 'nav-link';
-    };
+    const linkCls = (path: string) =>
+        location.pathname === path ? 'nav-link nav-link-active' : 'nav-link';
+
+    const linkClsStartsWith = (prefix: string) =>
+        location.pathname.startsWith(prefix) ? 'nav-link nav-link-active' : 'nav-link';
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -41,153 +41,110 @@ export const Navbar: React.FC = () => {
 
     const initials = user?.username?.slice(0, 2).toUpperCase() ?? '?';
 
+    /* ─── Determine nav links by role ─── */
+    const renderNavLinks = () => {
+        if (!isAuthenticated) {
+            // Guest
+            return (
+                <>
+                    <Link to="/" className={linkCls('/')}>Home</Link>
+                    <Link to="/login" className={linkCls('/login')}>Login</Link>
+                    <Link to="/register/student" className={linkClsStartsWith('/register')}>Register</Link>
+                </>
+            );
+        }
+
+        if (role === 'teacher') {
+            // Teacher: Courses, My Courses, Assignments, Quizzes
+            return (
+                <>
+                    <Link to="/" className={linkCls('/')}>Courses</Link>
+                    <Link to="/my-courses" className={linkClsStartsWith('/my-courses')}>My Courses</Link>
+                    <Link to="/assignments" className={linkClsStartsWith('/assignment')}>Assignments</Link>
+                    <Link to="/quizzes" className={linkClsStartsWith('/quiz')}>Quizzes</Link>
+                </>
+            );
+        }
+
+        // Student: Courses, My Courses, Assignments, Quizzes, Grades
+        return (
+            <>
+                <Link to="/" className={linkCls('/')}>Courses</Link>
+                <Link to="/my-courses" className={linkClsStartsWith('/my-courses')}>My Courses</Link>
+                <Link to="/assignments" className={linkClsStartsWith('/assignment')}>Assignments</Link>
+                <Link to="/quizzes" className={linkClsStartsWith('/quiz')}>Quizzes</Link>
+                <Link to="/grades" className={linkClsStartsWith('/grades')}>Grades</Link>
+            </>
+        );
+    };
+
+    /* ─── Avatar dropdown (authenticated only) ─── */
+    const renderUserActions = () => {
+        if (!isAuthenticated) return null;
+
+        return (
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+                <button
+                    className="avatar-pill"
+                    onClick={() => setDropdownOpen((prev) => !prev)}
+                >
+                    {avatarUrl ? (
+                        <img
+                            src={avatarUrl}
+                            alt="Avatar"
+                            className="avatar-circle avatar-circle-img"
+                        />
+                    ) : (
+                        <span className="avatar-circle avatar-circle-initials">
+                            {initials}
+                        </span>
+                    )}
+                    <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {user?.username}
+                    </span>
+                    <span style={{ fontSize: '0.6rem', marginLeft: '0.1rem', opacity: 0.6 }}>
+                        {dropdownOpen ? '▲' : '▼'}
+                    </span>
+                </button>
+
+                {dropdownOpen && (
+                    <div className="avatar-dropdown">
+                        <button
+                            className="dropdown-item"
+                            onClick={() => { setDropdownOpen(false); navigate('/profile'); }}
+                        >
+                            <span>👤</span> Personal Information
+                        </button>
+                        <div className="dropdown-divider" />
+                        <button
+                            className="dropdown-item dropdown-item-danger"
+                            onClick={() => { setDropdownOpen(false); logout(); }}
+                        >
+                            <span>🚪</span> Logout
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <header className="app-header">
-            <div className="app-brand">
+            <Link to="/" className="app-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
                 <span className="app-logo-circle">EW</span>
                 <div>
                     <div className="app-title">Educational Website</div>
                     <div className="app-subtitle">Learning platform</div>
                 </div>
-            </div>
-            <nav className="app-nav">
-                <Link to="/" className={getLinkClass('/')}>
-                    Courses
-                </Link>
-                {isAuthenticated && (
-                    <>
-                        <Link to="/my-courses" className={getLinkClass('/my-courses')}>
-                            My Courses
-                        </Link>
-                        <Link to="/assignments" className={getLinkClass('/assignments')}>
-                            Assignments
-                        </Link>
-                        <Link to="/quizzes" className={getLinkClass('/quizzes')}>
-                            Quizzes
-                        </Link>
-                        <Link to="/grades" className={getLinkClassStartsWith('/grades')}>
-                            Grades
-                        </Link>
-                    </>
-                )}
-                {isAuthenticated ? (
-                    <div ref={dropdownRef} style={{ position: 'relative', marginLeft: '0.25rem' }}>
-                        <button
-                            onClick={() => setDropdownOpen((prev) => !prev)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                background: 'none',
-                                border: '1px solid rgba(148, 163, 184, 0.2)',
-                                borderRadius: '9999px',
-                                padding: '0.3rem 0.75rem 0.3rem 0.3rem',
-                                cursor: 'pointer',
-                                color: '#e5e7eb',
-                                fontSize: '0.9rem',
-                                transition: 'border-color 0.2s',
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)'}
-                            onMouseLeave={(e) => {
-                                if (!dropdownOpen) e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.2)';
-                            }}
-                        >
-                            {avatarUrl ? (
-                                <img
-                                    src={avatarUrl}
-                                    alt="Avatar"
-                                    style={{
-                                        width: '2rem', height: '2rem', borderRadius: '50%',
-                                        objectFit: 'cover', flexShrink: 0,
-                                    }}
-                                />
-                            ) : (
-                                <span style={{
-                                    width: '2rem', height: '2rem', borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '0.75rem', fontWeight: 700, color: '#fff',
-                                    flexShrink: 0,
-                                }}>
-                                    {initials}
-                                </span>
-                            )}
-                            <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {user?.username}
-                            </span>
-                            <span style={{ fontSize: '0.65rem', marginLeft: '0.15rem' }}>
-                                {dropdownOpen ? '▲' : '▼'}
-                            </span>
-                        </button>
+            </Link>
 
-                        {dropdownOpen && (
-                            <div style={{
-                                position: 'absolute',
-                                right: 0,
-                                top: 'calc(100% + 0.5rem)',
-                                minWidth: '180px',
-                                background: 'rgba(15, 23, 42, 0.95)',
-                                border: '1px solid rgba(148, 163, 184, 0.2)',
-                                borderRadius: '0.75rem',
-                                padding: '0.4rem',
-                                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                                zIndex: 999,
-                                backdropFilter: 'blur(12px)',
-                            }}>
-                                <button
-                                    onClick={() => { setDropdownOpen(false); navigate('/profile'); }}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '0.6rem',
-                                        width: '100%', padding: '0.6rem 0.85rem', borderRadius: '0.5rem',
-                                        border: 'none', background: 'transparent',
-                                        color: '#e5e7eb', fontSize: '0.9rem', cursor: 'pointer',
-                                        textAlign: 'left', transition: 'background 0.15s',
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(148, 163, 184, 0.1)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                >
-                                    <span style={{ fontSize: '1rem' }}>👤</span>
-                                    Personal Information
-                                </button>
-                                <div style={{ height: '1px', background: 'rgba(148, 163, 184, 0.1)', margin: '0.25rem 0.5rem' }} />
-                                <button
-                                    onClick={() => { setDropdownOpen(false); logout(); }}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '0.6rem',
-                                        width: '100%', padding: '0.6rem 0.85rem', borderRadius: '0.5rem',
-                                        border: 'none', background: 'transparent',
-                                        color: '#fca5a5', fontSize: '0.9rem', cursor: 'pointer',
-                                        textAlign: 'left', transition: 'background 0.15s',
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                >
-                                    <span style={{ fontSize: '1rem' }}>🚪</span>
-                                    Logout
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <>
-                        <Link to="/login" className={getLinkClass('/login')}>
-                            Login
-                        </Link>
-                        <Link
-                            to="/register/student"
-                            className={getLinkClassStartsWith('/register/student')}
-                        >
-                            Student sign up
-                        </Link>
-                        <Link
-                            to="/register/teacher"
-                            className={getLinkClassStartsWith('/register/teacher')}
-                        >
-                            Teacher sign up
-                        </Link>
-                    </>
-                )}
+            <nav className="app-nav-center">
+                {renderNavLinks()}
             </nav>
+
+            <div className="app-nav-right">
+                {renderUserActions()}
+            </div>
         </header>
     );
 };
