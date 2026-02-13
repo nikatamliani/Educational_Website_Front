@@ -17,7 +17,7 @@ import {
     type CourseAssignment,
     type CreateAssignmentPayload,
 } from '../api/assignments'
-import { fetchQuizzesByCourseId, saveQuiz, type CourseQuiz, type QuizDto } from '../api/quizzes'
+import { fetchQuizzesByCourseId, saveQuiz, deleteQuiz, type CourseQuiz, type QuizDto } from '../api/quizzes'
 import { Button } from '../components/Button'
 import { useAuth } from '../context/AuthContext'
 import { CourseForm } from '../components/CourseForm'
@@ -286,6 +286,21 @@ export function CourseDetailsPage() {
             setCreateQuizError('Failed to create quiz')
         } finally {
             setCreatingQuiz(false)
+        }
+    }
+
+    const handleDeleteQuiz = async (e: React.MouseEvent, quizId: number) => {
+        e.stopPropagation()
+        if (!window.confirm('Are you sure you want to delete this quiz?')) return
+
+        try {
+            await deleteQuiz(quizId)
+            // Refresh list
+            const quizData = await fetchQuizzesByCourseId(course!.id)
+            setQuizzes(quizData)
+        } catch (err) {
+            console.error(err)
+            alert('Failed to delete quiz')
         }
     }
 
@@ -715,6 +730,24 @@ export function CourseDetailsPage() {
                                                             End: {new Date(q.endDate).toLocaleDateString()}
                                                         </span>
                                                     )}
+                                                </div>
+
+                                                <div style={{ marginTop: '0.8rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={(e) => handleDeleteQuiz(e, q.id)}
+                                                        style={{
+                                                            color: '#ef4444',
+                                                            padding: '0.3rem 0.6rem',
+                                                            fontSize: '0.85rem',
+                                                            height: 'auto',
+                                                            borderColor: 'rgba(239, 68, 68, 0.3)',
+                                                            borderWidth: '1px',
+                                                            borderStyle: 'solid'
+                                                        }}
+                                                    >
+                                                        Delete
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </article>

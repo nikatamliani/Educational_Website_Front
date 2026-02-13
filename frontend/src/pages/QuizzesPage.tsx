@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
-import { fetchStudentQuizzes, type Quiz } from '../api/quizzes'
+import { fetchStudentQuizzes, fetchTeacherQuizzes, type Quiz } from '../api/quizzes'
 import { QuizCard } from '../components/QuizCard'
+import { useAuth } from '../context/AuthContext'
 
 type Tab = 'upcoming' | 'returned'
 
 export function QuizzesPage() {
+    const { user } = useAuth()
+    const isTeacher = user?.role === 'teacher'
+
     const [quizzes, setQuizzes] = useState<Quiz[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -16,7 +20,9 @@ export function QuizzesPage() {
         async function loadQuizzes() {
             try {
                 setLoading(true)
-                const data = await fetchStudentQuizzes()
+                const data = isTeacher
+                    ? await fetchTeacherQuizzes()
+                    : await fetchStudentQuizzes()
                 if (isMounted) {
                     setQuizzes(data)
                 }
@@ -36,7 +42,7 @@ export function QuizzesPage() {
         return () => {
             isMounted = false
         }
-    }, [])
+    }, [isTeacher])
 
     const filteredQuizzes = quizzes.filter((q) => q.status === activeTab)
 
@@ -44,7 +50,9 @@ export function QuizzesPage() {
         <div className="width-full">
             <h1 className="page-title">Quizzes</h1>
             <p className="page-description">
-                Take upcoming quizzes and review your results.
+                {isTeacher
+                    ? 'View upcoming and past quizzes for your courses.'
+                    : 'Take upcoming quizzes and review your results.'}
             </p>
 
             <div className="student-nav" style={{ marginBottom: '1.5rem' }}>
@@ -83,3 +91,4 @@ export function QuizzesPage() {
         </div>
     )
 }
+

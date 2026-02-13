@@ -1,5 +1,5 @@
 import { request } from './client'
-import { fetchMyCourses } from './courses'
+import { fetchMyCourses, fetchTeacherCourses } from './courses'
 
 // ── Backend DTO interfaces ──────────────────────────────────────────
 
@@ -133,6 +133,49 @@ export async function fetchStudentQuizzes(): Promise<Quiz[]> {
         return allQuizzes
     } catch (error) {
         console.error('Failed to fetch student quizzes:', error)
+        return []
+    }
+}
+
+export async function fetchTeacherQuizzes(): Promise<Quiz[]> {
+    try {
+        const courses = await fetchTeacherCourses()
+        const allQuizzes: Quiz[] = []
+
+        await Promise.all(
+            courses.map(async (course) => {
+                try {
+                    const courseQuizzes = await request<QuizDto[]>(
+                        `/api/quiz/course/${course.id}`,
+                        { method: 'GET', headers: authHeaders() }
+                    )
+
+                    for (const dto of courseQuizzes) {
+                        const now = new Date()
+                        const endDate = new Date(dto.endDate)
+                        const status: QuizStatus = endDate < now ? 'returned' : 'upcoming'
+
+                        allQuizzes.push({
+                            id: dto.id,
+                            courseId: course.id,
+                            courseTitle: course.title,
+                            title: dto.title,
+                            startDate: dto.startDate,
+                            endDate: dto.endDate,
+                            questionCount: dto.quizQuestionDtos?.length ?? 0,
+                            status,
+                            totalQuestions: dto.quizQuestionDtos?.length ?? 0,
+                        })
+                    }
+                } catch (e) {
+                    console.error(`Failed to fetch quizzes for course ${course.id}`, e)
+                }
+            })
+        )
+
+        return allQuizzes
+    } catch (error) {
+        console.error('Failed to fetch teacher quizzes:', error)
         return []
     }
 }
