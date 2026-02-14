@@ -187,7 +187,7 @@ export function MyCoursesPage() {
               <CourseCard
                 key={course.id}
                 course={course}
-                basePath={isTeacher ? '/course/' : '/my-courses/'}
+                basePath={isTeacher ? '/teacher-course/' : '/my-courses/'}
                 onEdit={isTeacher ? handleEditClick : undefined}
                 onDelete={isTeacher ? handleDeleteClick : undefined}
               />

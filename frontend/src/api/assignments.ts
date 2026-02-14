@@ -10,12 +10,14 @@ export interface Assignment {
     courseTitle: string
     title: string
     description: string
+    content?: string // Added content field
     dueDate: string // ISO date string
     status: AssignmentStatus
     grade?: number
     maxGrade?: number
     feedback?: string
     submittedDate?: string
+    submissionContent?: string
 }
 
 interface AssignmentDto {
@@ -23,6 +25,7 @@ interface AssignmentDto {
     courseId: number
     title: string
     description: string
+    content?: string // Added content field
     deadline: string // ISO date string
 }
 
@@ -117,12 +120,14 @@ export async function fetchStudentAssignments(): Promise<Assignment[]> {
                             courseTitle: course.title,
                             title: dto.title,
                             description: dto.description,
+                            content: dto.content,
                             dueDate: dto.deadline,
                             status,
                             grade,
                             maxGrade,
                             feedback,
                             submittedDate,
+                            submissionContent: status === 'submitted' || status === 'returned' ? (await request<AssignmentSubmissionDto>(`/api/assignment/my-submission/${dto.id}`, { method: 'GET', headers }).then(s => s.content).catch(() => undefined)) : undefined
                         }
 
                         return assignment
@@ -343,6 +348,8 @@ export async function fetchAssignmentById(id: number): Promise<Assignment | null
             }
         } catch (e) { }
 
+        let submissionContent: string | undefined
+
         if (status !== 'returned') {
             try {
                 const submission = await request<AssignmentSubmissionDto>(
@@ -351,6 +358,17 @@ export async function fetchAssignmentById(id: number): Promise<Assignment | null
                 )
                 if (submission) {
                     status = 'submitted'
+                    submissionContent = submission.content
+                }
+            } catch (e) { }
+        } else {
+            try {
+                const submission = await request<AssignmentSubmissionDto>(
+                    `/api/assignment/my-submission/${id}`,
+                    { method: 'GET', headers }
+                )
+                if (submission) {
+                    submissionContent = submission.content
                 }
             } catch (e) { }
         }
@@ -369,12 +387,14 @@ export async function fetchAssignmentById(id: number): Promise<Assignment | null
             courseTitle, // We might need to fetch this if important
             title: dto.title,
             description: dto.description,
+            content: dto.content,
             dueDate: dto.deadline,
             status,
             grade,
             maxGrade,
             feedback,
-            submittedDate
+            submittedDate,
+            submissionContent
         }
     } catch (error) {
         console.error('Failed to fetch assignment:', error)

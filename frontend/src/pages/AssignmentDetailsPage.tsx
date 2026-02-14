@@ -161,9 +161,16 @@ export const AssignmentDetailsPage: React.FC = () => {
                 </div>
 
                 <div style={{ marginBottom: '2rem', color: '#d1d5db', lineHeight: '1.6' }}>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', marginBottom: '0.5rem' }}>Instructions</h3>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', marginBottom: '0.5rem' }}>Description</h3>
                     <p style={{ whiteSpace: 'pre-wrap' }}>{assignment.description}</p>
                 </div>
+
+                {assignment.content && (
+                    <div style={{ marginBottom: '2rem', color: '#d1d5db', lineHeight: '1.6' }}>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', marginBottom: '0.5rem' }}>Instructions</h3>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{assignment.content}</div>
+                    </div>
+                )}
 
                 {assignment.feedback && (
                     <div style={{
@@ -187,7 +194,22 @@ export const AssignmentDetailsPage: React.FC = () => {
                     </h3>
 
                     {assignment.status === 'returned' ? (
-                        <p style={{ color: '#9ca3af' }}>This assignment has been graded. No further submissions are allowed.</p>
+                        <>
+                            <p style={{ color: '#9ca3af', marginBottom: '1rem' }}>This assignment has been graded. No further submissions are allowed.</p>
+                            {assignment.submissionContent && (
+                                <div style={{
+                                    padding: '1rem',
+                                    borderRadius: '0.5rem',
+                                    backgroundColor: '#111827',
+                                    border: '1px solid #374151',
+                                    color: '#d1d5db',
+                                    whiteSpace: 'pre-wrap'
+                                }}>
+                                    <h4 style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Your Submission:</h4>
+                                    {assignment.submissionContent}
+                                </div>
+                            )}
+                        </>
                     ) : assignment.status === 'past_due' ? (
                         <div style={{
                             padding: '1.25rem',
@@ -205,6 +227,20 @@ export const AssignmentDetailsPage: React.FC = () => {
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {assignment.submissionContent && (
+                                <div style={{
+                                    marginBottom: '1rem',
+                                    padding: '1rem',
+                                    borderRadius: '0.5rem',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                                    color: '#d1d5db',
+                                    whiteSpace: 'pre-wrap'
+                                }}>
+                                    <h4 style={{ fontSize: '0.9rem', color: '#93c5fd', marginBottom: '0.5rem' }}>Current Submission:</h4>
+                                    {assignment.submissionContent}
+                                </div>
+                            )}
                             <textarea
                                 value={submissionContent}
                                 onChange={(e) => setSubmissionContent(e.target.value)}

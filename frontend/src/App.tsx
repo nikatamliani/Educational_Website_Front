@@ -25,6 +25,7 @@ import { StudentsPage } from './pages/StudentsPage'
 import { StudentDetailsPage } from './pages/StudentDetailsPage'
 import { TeachersPage } from './pages/TeachersPage'
 import { TeacherDetailsPage } from './pages/TeacherDetailsPage'
+import { TeacherCoursePage } from './pages/TeacherCoursePage'
 
 function AppLayout() {
   return (
@@ -60,6 +61,8 @@ function AppLayout() {
           <Route path="/students/:username" element={<ProtectedRoute><StudentDetailsPage /></ProtectedRoute>} />
           <Route path="/teachers" element={<ProtectedRoute><TeachersPage /></ProtectedRoute>} />
           <Route path="/teachers/:username" element={<ProtectedRoute><TeacherDetailsPage /></ProtectedRoute>} />
+
+          <Route path="/teacher-course/:id" element={<ProtectedRoute><TeacherCoursePage /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes >
