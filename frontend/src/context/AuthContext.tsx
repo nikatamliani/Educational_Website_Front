@@ -3,7 +3,7 @@ import { login as apiLogin, registerStudent, registerTeacher } from '../api/auth
 
 interface User {
     username: string;
-    role: 'student' | 'teacher';
+    role: 'student' | 'teacher' | 'admin';
 }
 
 interface AuthContextType {
@@ -25,15 +25,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Check for persisted auth on mount
         const token = localStorage.getItem('authToken');
         const storedUsername = localStorage.getItem('authUsername');
-        // We might want to store role in a simpler way or parse from roles array
-        // For now, let's just assume if we have a token and username, we are logged in.
-        // Ideally we should validate the token with an API call (e.g. /me)
 
         // Attempt to recover role from stored roles or default
-        let role: 'student' | 'teacher' = 'student';
+        let role: 'student' | 'teacher' | 'admin' = 'student';
         try {
             const roles = JSON.parse(localStorage.getItem('authRoles') || '[]');
-            if (roles.includes('ROLE_TEACHER')) role = 'teacher';
+            if (roles.includes('ROLE_ADMIN')) role = 'admin';
+            else if (roles.includes('ROLE_TEACHER')) role = 'teacher';
         } catch {
             // ignore
         }
@@ -52,8 +50,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('authUsername', response.username);
         localStorage.setItem('authRoles', JSON.stringify(response.roles));
 
-        // Determine role (simplified logic)
-        const role = response.roles.includes('ROLE_TEACHER') ? 'teacher' : 'student';
+        // Determine role
+        let role: 'student' | 'teacher' | 'admin' = 'student';
+        if (response.roles.includes('ROLE_ADMIN')) role = 'admin';
+        else if (response.roles.includes('ROLE_TEACHER')) role = 'teacher';
 
         setUser({ username: response.username, role });
     };

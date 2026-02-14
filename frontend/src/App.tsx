@@ -21,6 +21,10 @@ import { ProfilePage } from './pages/ProfilePage'
 import { QuizManagementPage } from './pages/QuizManagementPage'
 import { QuizTakingPage } from './pages/QuizTakingPage'
 import { CalendarPage } from './pages/CalendarPage'
+import { StudentsPage } from './pages/StudentsPage'
+import { StudentDetailsPage } from './pages/StudentDetailsPage'
+import { TeachersPage } from './pages/TeachersPage'
+import { TeacherDetailsPage } from './pages/TeacherDetailsPage'
 
 function AppLayout() {
   return (
@@ -50,6 +54,12 @@ function AppLayout() {
           <Route path="/course/:courseId/quiz/:quizId/edit" element={<ProtectedRoute><QuizManagementPage /></ProtectedRoute>} />
           <Route path="/course/:courseId/quiz/:quizId/take" element={<ProtectedRoute><QuizTakingPage /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+
+          {/* Admin routes */}
+          <Route path="/students" element={<ProtectedRoute><StudentsPage /></ProtectedRoute>} />
+          <Route path="/students/:username" element={<ProtectedRoute><StudentDetailsPage /></ProtectedRoute>} />
+          <Route path="/teachers" element={<ProtectedRoute><TeachersPage /></ProtectedRoute>} />
+          <Route path="/teachers/:username" element={<ProtectedRoute><TeacherDetailsPage /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes >

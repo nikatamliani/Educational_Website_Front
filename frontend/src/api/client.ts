@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+  import.meta.env.VITE_API_BASE_URL ?? ''
 
 export async function request<T>(path: string, init: RequestInit): Promise<T> {
   const { headers: initHeaders, ...restInit } = init

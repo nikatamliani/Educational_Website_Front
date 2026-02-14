@@ -12,7 +12,7 @@ export const Navbar: React.FC = () => {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const role = user?.role; // 'student' | 'teacher' | undefined
+    const role = user?.role; // 'student' | 'teacher' | 'admin' | undefined
 
     const linkCls = (path: string) =>
         location.pathname === path ? 'nav-link nav-link-active' : 'nav-link';
@@ -50,6 +50,16 @@ export const Navbar: React.FC = () => {
                     <Link to="/" className={linkCls('/')}>Home</Link>
                     <Link to="/login" className={linkCls('/login')}>Login</Link>
                     <Link to="/register/student" className={linkClsStartsWith('/register')}>Register</Link>
+                </>
+            );
+        }
+
+        if (role === 'admin') {
+            // Admin: Students, Teachers
+            return (
+                <>
+                    <Link to="/students" className={linkClsStartsWith('/students')}>Students</Link>
+                    <Link to="/teachers" className={linkClsStartsWith('/teachers')}>Teachers</Link>
                 </>
             );
         }
