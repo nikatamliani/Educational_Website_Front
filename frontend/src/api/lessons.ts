@@ -22,3 +22,32 @@ export async function fetchLessonsByCourse(courseId: number): Promise<LessonDto[
         headers: authHeaders(),
     })
 }
+
+export async function createLesson(lesson: Partial<LessonDto>): Promise<LessonDto> {
+    return request<LessonDto>('/api/lessons/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders(),
+        },
+        body: JSON.stringify(lesson),
+    })
+}
+
+export async function updateLesson(lesson: Partial<LessonDto>): Promise<LessonDto> {
+    return request<LessonDto>('/api/lessons/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders(),
+        },
+        body: JSON.stringify(lesson),
+    })
+}
+
+export async function deleteLesson(id: number): Promise<void> {
+    return request<void>(`/api/lessons/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    })
+}
