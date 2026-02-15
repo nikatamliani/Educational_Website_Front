@@ -151,3 +151,25 @@ export async function searchCourses(word: string): Promise<Course[]> {
     headers,
   })
 }
+
+export async function fetchCoursesByStudentId(studentId: number): Promise<Course[]> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  return request<Course[]>(`/api/course/student/${studentId}`, {
+    method: 'GET',
+    headers,
+  })
+}
+
+export async function unenrollStudentFromCourse(courseId: number, studentId: number): Promise<void> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
+
+  return request<void>(`/api/course/${courseId}/${studentId}/unenroll`, {
+    method: 'DELETE',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+}

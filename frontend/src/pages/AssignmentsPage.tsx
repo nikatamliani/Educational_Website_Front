@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import {
     fetchStudentAssignments,
     fetchTeacherSubmissions,
@@ -234,14 +234,18 @@ export function AssignmentsPage() {
                                                 {sub.courseName}
                                             </p>
                                         )}
-                                        <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.25rem' }}>
-                                            {studentFullName(sub.studentFirstName, sub.studentLastName, `Student #${sub.studentId}`)}
-                                        </p>
-                                        {sub.studentUsername && (
-                                            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.4rem' }}>
-                                                @{sub.studentUsername}
+                                        <Link
+                                            to={`/students/${sub.studentUsername?.toLowerCase() || sub.studentId}`}
+                                            style={{ textDecoration: 'none' }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <p style={{ fontSize: '0.95rem', color: '#e5e7eb', marginBottom: '0.25rem', fontWeight: 500 }}>
+                                                {studentFullName(sub.studentFirstName, sub.studentLastName, `Student #${sub.studentId}`)}
                                             </p>
-                                        )}
+                                            <p style={{ fontSize: '0.75rem', color: '#6366f1', marginBottom: '0.4rem' }}>
+                                                {sub.studentUsername ? `@${sub.studentUsername}` : `ID: ${sub.studentId}`}
+                                            </p>
+                                        </Link>
                                         {sub.assignmentDeadline && (
                                             <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.4rem' }}>
                                                 Deadline: {new Date(sub.assignmentDeadline).toLocaleDateString()}
@@ -293,14 +297,17 @@ export function AssignmentsPage() {
                                                 {res.courseName}
                                             </p>
                                         )}
-                                        <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.25rem' }}>
-                                            {studentFullName(res.studentFirstName, res.studentLastName, `Student #${res.studentId}`)}
-                                        </p>
-                                        {res.studentUsername && (
-                                            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.4rem' }}>
-                                                @{res.studentUsername}
+                                        <Link
+                                            to={`/students/${res.studentUsername?.toLowerCase() || res.studentId}`}
+                                            style={{ textDecoration: 'none' }}
+                                        >
+                                            <p style={{ fontSize: '0.95rem', color: '#e5e7eb', marginBottom: '0.25rem', fontWeight: 500 }}>
+                                                {studentFullName(res.studentFirstName, res.studentLastName, `Student #${res.studentId}`)}
                                             </p>
-                                        )}
+                                            <p style={{ fontSize: '0.75rem', color: '#6366f1', marginBottom: '0.4rem' }}>
+                                                {res.studentUsername ? `@${res.studentUsername}` : `ID: ${res.studentId}`}
+                                            </p>
+                                        </Link>
                                         <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
                                             <span style={{ color: '#10b981' }}>
                                                 Grade: <strong>{res.grade}</strong>

@@ -27,15 +27,19 @@
 }
 
 .student-card {
-    background: var(--card-bg, #fff);
-    border: 1px solid var(--border-color, #eee);
-    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.3),
+        0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
 }
 
 .student-avatar {
@@ -66,13 +70,20 @@
 
 .student-info h3 {
     margin: 0 0 0.5rem;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    color: white;
+    font-weight: 600;
 }
 
 .student-username {
-    color: #666;
-    font-size: 0.9rem;
-    margin: 0 0 0.25rem;
+    color: var(--primary-color, #646cff);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    padding: 0.2rem 0.5rem;
+    background: rgba(100, 108, 255, 0.1);
+    border-radius: 4px;
+    display: inline-block;
 }
 
 .student-email {
@@ -80,4 +91,69 @@
     font-size: 0.85rem;
     margin: 0;
     word-break: break-all;
+}
+
+/* Search Bar Styles */
+.search-container {
+    position: relative;
+    max-width: 480px;
+    margin-bottom: 2rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 2.75rem;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.7);
+    color: #f8fafc;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.clear-search {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-search:hover {
+    color: #f8fafc;
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 12px;
 }
