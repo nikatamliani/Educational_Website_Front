@@ -183,3 +183,66 @@
     color: #b91c1c;
     border: 1px solid #fecaca;
 }
+
+/* Enrolled Courses Styles */
+.course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.course-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.course-item:hover {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(148, 163, 184, 0.4);
+}
+
+.course-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.course-title {
+    font-weight: 600;
+    color: #e5e7eb;
+    font-size: 1rem;
+}
+
+.course-id {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.loading-inline {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.no-data {
+    color: #9ca3af;
+    font-style: italic;
+}

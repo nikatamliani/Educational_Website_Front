@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { fetchAssignmentById, submitAssignment, Assignment } from '../api/assignments'
 import { Button } from '../components/Button'
+import ErrorMessage from '../components/ErrorMessage'
+import { useToast } from '../context/ToastContext'
 
 export const AssignmentDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
     const location = useLocation()
+    const { showToast } = useToast()
     const fromCourseId = (location.state as { fromCourseId?: number } | null)?.fromCourseId
     const fromTab = (location.state as { fromTab?: string } | null)?.fromTab
 
@@ -19,23 +22,31 @@ export const AssignmentDetailsPage: React.FC = () => {
     }
     const [assignment, setAssignment] = useState<Assignment | null>(null)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [submissionContent, setSubmissionContent] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
-        if (!id) return
+        loadAssignment()
+    }, [id])
 
-        const loadAssignment = async () => {
-            setLoading(true)
+    const loadAssignment = async () => {
+        if (!id) return
+        setLoading(true)
+        setError(null)
+        try {
             const data = await fetchAssignmentById(parseInt(id, 10))
             if (data) {
                 setAssignment(data)
+            } else {
+                setError('Assignment not found')
             }
+        } catch (err: any) {
+            setError(err.message || 'Failed to load assignment')
+        } finally {
             setLoading(false)
         }
-
-        loadAssignment()
-    }, [id])
+    }
 
     // ESC key → go back
     useEffect(() => {
@@ -58,9 +69,10 @@ export const AssignmentDetailsPage: React.FC = () => {
                 setAssignment(updated)
             }
             setSubmissionContent('')
-        } catch (error) {
-            console.error('Failed to submit assignment:', error)
-            alert('Failed to submit assignment. Please try again.')
+            showToast('Assignment submitted successfully', 'success')
+        } catch (err: any) {
+            console.error('Failed to submit assignment:', err)
+            showToast(err.message || 'Failed to submit assignment', 'error')
         } finally {
             setSubmitting(false)
         }
@@ -86,10 +98,21 @@ export const AssignmentDetailsPage: React.FC = () => {
 
     if (!assignment) {
         return (
-            <div className="container" style={{ padding: '2rem', textAlign: 'center', color: 'white' }}>
-                Assignment not found.
-                <br />
-                <Button onClick={goBack}>Back</Button>
+            <div className="p-4">
+                {error ? (
+                    <ErrorMessage
+                        message={error}
+                        onRetry={loadAssignment}
+                        title="Failed to Load Assignment"
+                    />
+                ) : (
+                    <div style={{ textAlign: 'center', color: 'white' }}>
+                        Assignment not found.
+                    </div>
+                )}
+                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                    <Button onClick={goBack}>Back</Button>
+                </div>
             </div>
         )
     }
