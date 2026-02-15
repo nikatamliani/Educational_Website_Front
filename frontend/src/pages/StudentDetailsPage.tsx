@@ -2,15 +2,23 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchStudentByUsername, updateStudent, Student } from '../api/student'
 import { Button } from '../components/Button'
+import ErrorMessage from '../components/ErrorMessage'
+import { useToast } from '../context/ToastContext'
+import { Course, fetchCoursesByStudentId, unenrollStudentFromCourse } from '../api/courses'
 // import { Input } from '../components/Input' 
 import './StudentDetailsPage.css'
 
 export const StudentDetailsPage: React.FC = () => {
     const { username } = useParams<{ username: string }>()
     const navigate = useNavigate()
+    const { showToast } = useToast()
     const [student, setStudent] = useState<Student | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    // Courses state
+    const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([])
+    const [loadingCourses, setLoadingCourses] = useState(false)
 
     // Edit state
     const [isEditing, setIsEditing] = useState(false)
@@ -26,13 +34,17 @@ export const StudentDetailsPage: React.FC = () => {
     const loadStudent = () => {
         if (!username) return
         setLoading(true)
+        setError(null)
         fetchStudentByUsername(username)
             .then((s) => {
-                if (!s) throw new Error('Student not found')
+                if (!s) throw new Error(`Student "${username}" not found. Please verify the username or link.`)
                 setStudent(s)
                 setEditForm(s) // Initialize form
+                loadEnrolledCourses(s.id)
             })
-            .catch((err) => setError(err.message))
+            .catch((err) => {
+                setError(err.message || 'Failed to load student details')
+            })
             .finally(() => setLoading(false))
     }
 
@@ -50,6 +62,33 @@ export const StudentDetailsPage: React.FC = () => {
         setEditForm(prev => ({ ...prev, [name]: value }))
     }
 
+    const loadEnrolledCourses = async (studentId: number) => {
+        setLoadingCourses(true)
+        try {
+            const courses = await fetchCoursesByStudentId(studentId)
+            setEnrolledCourses(courses)
+        } catch (err: any) {
+            console.error('Failed to load courses:', err)
+            // We don't set a global error here to not block the whole page
+        } finally {
+            setLoadingCourses(false)
+        }
+    }
+
+    const handleUnenroll = async (courseId: number) => {
+        if (!student) return
+        if (!window.confirm('Are you sure you want to unenroll this student from the course?')) return
+
+        try {
+            await unenrollStudentFromCourse(courseId, student.id)
+            showToast('Student unenrolled successfully', 'success')
+            // Refresh courses
+            loadEnrolledCourses(student.id)
+        } catch (err: any) {
+            showToast(err.message || 'Failed to unenroll student', 'error')
+        }
+    }
+
     const handleSave = async () => {
         if (!student || !username) return
 
@@ -61,6 +100,7 @@ export const StudentDetailsPage: React.FC = () => {
             const updated = { ...student, ...editForm } as Student
             setStudent(updated)
             setIsEditing(false)
+            showToast('Student updated successfully', 'success')
         } catch (err: any) {
             setSaveError(`Failed to update student: ${err.message || 'Unknown error'}`)
             console.error('Update student failed:', err)
@@ -72,7 +112,11 @@ export const StudentDetailsPage: React.FC = () => {
     if (loading) return <div className="p-4">Loading student details...</div>
     if (error) return (
         <div className="p-4">
-            <div className="text-error">{error}</div>
+            <ErrorMessage
+                message={error}
+                onRetry={loadStudent}
+                title="Failed to Load Student"
+            />
             <button onClick={() => navigate(-1)} className="btn btn-secondary mt-4">Go Back</button>
         </div>
     )
@@ -110,7 +154,11 @@ export const StudentDetailsPage: React.FC = () => {
                 </div>
 
                 <div className="details-body">
-                    {saveError && <div className="alert alert-error">{saveError}</div>}
+                    {saveError && (
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <ErrorMessage message={saveError} title="Save Failed" />
+                        </div>
+                    )}
 
                     {isEditing ? (
                         <div className="edit-form">
@@ -163,6 +211,17 @@ export const StudentDetailsPage: React.FC = () => {
                                     className="form-input"
                                 />
                             </div>
+                            <div className="form-group">
+                                <label>New Password (Optional)</label>
+                                <input
+                                    name="password"
+                                    type="password"
+                                    onChange={handleInputChange}
+                                    className="form-input"
+                                    placeholder="Enter new password to change it"
+                                />
+                                <small className="form-info">Leave blank to keep current password</small>
+                            </div>
 
                             <div className="form-actions">
                                 <Button
@@ -198,6 +257,32 @@ export const StudentDetailsPage: React.FC = () => {
                                     <span className="info-label">Username:</span>
                                     <span className="info-value">{student.username}</span>
                                 </div>
+                            </div>
+
+                            <div className="details-section">
+                                <h2>Enrolled Courses</h2>
+                                {loadingCourses ? (
+                                    <div className="loading-inline">Loading courses...</div>
+                                ) : enrolledCourses.length > 0 ? (
+                                    <div className="course-list">
+                                        {enrolledCourses.map(course => (
+                                            <div key={course.id} className="course-item">
+                                                <div className="course-info">
+                                                    <span className="course-title">{course.title}</span>
+                                                    <span className="course-id">ID: {course.id}</span>
+                                                </div>
+                                                <button
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() => handleUnenroll(course.id)}
+                                                >
+                                                    Unenroll
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="no-data">No enrolled courses found.</p>
+                                )}
                             </div>
                         </div>
                     )}

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { fetchMyProfile, updateMyProfile, UserProfile } from '../api/profile'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/Button'
+import ErrorMessage from '../components/ErrorMessage'
+import { useToast } from '../context/ToastContext'
 
 export function ProfilePage() {
     const navigate = useNavigate()
@@ -30,8 +32,7 @@ export function ProfilePage() {
     const [confirmPassword, setConfirmPassword] = useState('')
 
     const [saving, setSaving] = useState(false)
-    const [successMsg, setSuccessMsg] = useState('')
-    const [errorMsg, setErrorMsg] = useState('')
+    const { showToast } = useToast()
 
     useEffect(() => {
         let mounted = true
@@ -60,6 +61,26 @@ export function ProfilePage() {
         return () => { mounted = false }
     }, [])
 
+    const loadProfile = () => {
+        setLoading(true)
+        setError(null)
+        fetchMyProfile()
+            .then((data) => {
+                setProfile(data)
+                setFirstName(data.firstName ?? '')
+                setLastName(data.lastName ?? '')
+                setEmail(data.email ?? '')
+                setPhone(data.phoneNumber ?? '')
+                setImage(data.image ?? '')
+                if (data._role === 'teacher') {
+                    setDepartment(data.department ?? '')
+                    setBio(data.bio ?? '')
+                }
+            })
+            .catch((err) => setError(err.message || 'Failed to load profile'))
+            .finally(() => setLoading(false))
+    }
+
     // ESC → back
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') navigate(-1) }
@@ -71,15 +92,12 @@ export function ProfilePage() {
         e.preventDefault()
         if (!profile) return
 
-        setErrorMsg('')
-        setSuccessMsg('')
-
         if (newPassword && newPassword !== confirmPassword) {
-            setErrorMsg('Passwords do not match.')
+            showToast('Passwords do not match.', 'error')
             return
         }
         if (newPassword && newPassword.length < 4) {
-            setErrorMsg('Password must be at least 4 characters.')
+            showToast('Password must be at least 4 characters.', 'error')
             return
         }
 
@@ -101,25 +119,35 @@ export function ProfilePage() {
             } else {
                 await updateMyProfile(shared, 'student', imageFile || undefined)
             }
-            setSuccessMsg('Profile updated successfully!')
+
+            showToast('Profile updated successfully!', 'success')
 
             // Reload profile to get new image URL
             const updated = await fetchMyProfile()
             setProfile(updated)
             setImage(updated.image ?? '')
             setImageFile(null)
-
             setNewPassword('')
             setConfirmPassword('')
-        } catch (err) {
-            setErrorMsg(err instanceof Error ? err.message : 'Failed to update profile')
+        } catch (err: any) {
+            showToast(err.message || 'Failed to update profile', 'error')
         } finally {
             setSaving(false)
         }
     }
 
     if (loading) return <div className="page-container"><div className="courses-message">Loading profile…</div></div>
-    if (error || !profile) return <div className="page-container"><div className="courses-message courses-message-error">{error || 'Profile not found'}</div></div>
+    if (error || !profile) {
+        return (
+            <div className="page-container">
+                <ErrorMessage
+                    message={error || 'Profile not found'}
+                    onRetry={loadProfile}
+                    title="Could Not Load Profile"
+                />
+            </div>
+        )
+    }
 
     const inputStyle: React.CSSProperties = {
         width: '100%',
@@ -283,25 +311,7 @@ export function ProfilePage() {
                     </div>
                 </div>
 
-                {/* Messages */}
-                {errorMsg && (
-                    <div style={{
-                        padding: '0.65rem 1rem', borderRadius: '0.5rem', marginBottom: '1rem',
-                        background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)',
-                        color: '#fca5a5', fontSize: '0.9rem',
-                    }}>
-                        {errorMsg}
-                    </div>
-                )}
-                {successMsg && (
-                    <div style={{
-                        padding: '0.65rem 1rem', borderRadius: '0.5rem', marginBottom: '1rem',
-                        background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)',
-                        color: '#6ee7b7', fontSize: '0.9rem',
-                    }}>
-                        {successMsg}
-                    </div>
-                )}
+
 
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '0.75rem' }}>

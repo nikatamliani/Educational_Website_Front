@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
     fetchTeacherSubmissions,
     fetchTeacherResults,
@@ -198,14 +198,20 @@ export function CourseAssignmentPage() {
                                 >
                                     <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#f59e0b' }} />
                                     <div style={{ marginLeft: '0.75rem' }}>
-                                        <p style={{ fontSize: '0.95rem', color: '#e5e7eb', marginBottom: '0.25rem', fontWeight: 500 }}>
-                                            {studentFullName(sub.studentFirstName, sub.studentLastName, `Student #${sub.studentId}`)}
-                                        </p>
-                                        {sub.studentUsername && (
-                                            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.4rem' }}>
-                                                @{sub.studentUsername}
+                                        <Link
+                                            to={`/students/${sub.studentUsername?.toLowerCase() || sub.studentId}`}
+                                            style={{ textDecoration: 'none' }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <p style={{ fontSize: '0.95rem', color: '#e5e7eb', marginBottom: '0.25rem', fontWeight: 500 }}>
+                                                {studentFullName(sub.studentFirstName, sub.studentLastName, `Student #${sub.studentId}`)}
                                             </p>
-                                        )}
+                                            {sub.studentUsername && (
+                                                <p style={{ fontSize: '0.75rem', color: '#6366f1', marginBottom: '0.4rem' }}>
+                                                    @{sub.studentUsername}
+                                                </p>
+                                            )}
+                                        </Link>
                                         {sub.content && (
                                             <div style={{
                                                 background: 'rgba(255,255,255,0.05)', borderRadius: '6px',
@@ -259,14 +265,19 @@ export function CourseAssignmentPage() {
                                 >
                                     <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: '#10b981' }} />
                                     <div style={{ marginLeft: '0.75rem' }}>
-                                        <p style={{ fontSize: '0.95rem', color: '#e5e7eb', marginBottom: '0.25rem', fontWeight: 500 }}>
-                                            {studentFullName(res.studentFirstName, res.studentLastName, `Student #${res.studentId}`)}
-                                        </p>
-                                        {res.studentUsername && (
-                                            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.4rem' }}>
-                                                @{res.studentUsername}
+                                        <Link
+                                            to={`/students/${res.studentUsername?.toLowerCase() || res.studentId}`}
+                                            style={{ textDecoration: 'none' }}
+                                        >
+                                            <p style={{ fontSize: '0.95rem', color: '#e5e7eb', marginBottom: '0.25rem', fontWeight: 500 }}>
+                                                {studentFullName(res.studentFirstName, res.studentLastName, `Student #${res.studentId}`)}
                                             </p>
-                                        )}
+                                            {res.studentUsername && (
+                                                <p style={{ fontSize: '0.75rem', color: '#6366f1', marginBottom: '0.4rem' }}>
+                                                    @{res.studentUsername}
+                                                </p>
+                                            )}
+                                        </Link>
                                         <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
                                             <span style={{ color: '#10b981' }}>
                                                 Grade: <strong>{res.grade}</strong>

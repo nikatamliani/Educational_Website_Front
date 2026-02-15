@@ -1,6 +1,18 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? ''
 
+export class ApiError extends Error {
+  status: number
+  data: any
+
+  constructor(message: string, status: number, data?: any) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.data = data
+  }
+}
+
 export async function request<T>(path: string, init: RequestInit): Promise<T> {
   const { headers: initHeaders, ...restInit } = init
   const headers: Record<string, string> = {
@@ -19,8 +31,9 @@ export async function request<T>(path: string, init: RequestInit): Promise<T> {
 
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`
+    let data: any = null
     try {
-      const data = await response.json()
+      data = await response.json()
       if (typeof data === 'string') {
         message = data
       } else if (data?.message) {
@@ -29,13 +42,13 @@ export async function request<T>(path: string, init: RequestInit): Promise<T> {
     } catch {
       // ignore JSON parse errors, fall back to default message
     }
-    throw new Error(message)
+    throw new ApiError(message, response.status, data)
   }
 
   try {
-    return (await response.json()) as T
+    const text = await response.text()
+    return text ? (JSON.parse(text) as T) : (undefined as unknown as T)
   } catch {
-    // no JSON body
     return undefined as unknown as T
   }
 }
