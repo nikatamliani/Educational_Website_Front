@@ -180,25 +180,31 @@ export interface CreateAssignmentPayload {
     deadline?: string   // ISO datetime string
 }
 
-export async function createAssignment(payload: CreateAssignmentPayload): Promise<CourseAssignment> {
+export async function createAssignment(payload: CreateAssignmentPayload, file?: File): Promise<CourseAssignment> {
     const token = localStorage.getItem('authToken')
     if (!token) throw new Error('You must be logged in as a teacher to create assignments.')
+
+    const formData = new FormData()
+    formData.append('data', JSON.stringify({
+        id: 0,
+        courseId: payload.courseId,
+        title: payload.title,
+        description: payload.description ?? '',
+        content: payload.content ?? '',
+        startDate: payload.startDate ?? null,
+        deadline: payload.deadline ?? null,
+    }))
+
+    if (file) {
+        formData.append('file', file)
+    }
 
     return await request<CourseAssignment>('/api/assignment/save', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-            id: 0,
-            courseId: payload.courseId,
-            title: payload.title,
-            description: payload.description ?? '',
-            content: payload.content ?? '',
-            startDate: payload.startDate ?? null,
-            deadline: payload.deadline ?? null,
-        }),
+        body: formData,
     })
 }
 
@@ -214,25 +220,31 @@ export async function deleteAssignment(assignmentId: number): Promise<void> {
     })
 }
 
-export async function updateAssignment(assignmentId: number, payload: CreateAssignmentPayload): Promise<CourseAssignment> {
+export async function updateAssignment(assignmentId: number, payload: CreateAssignmentPayload, file?: File): Promise<CourseAssignment> {
     const token = localStorage.getItem('authToken')
     if (!token) throw new Error('You must be logged in as a teacher to update assignments.')
+
+    const formData = new FormData()
+    formData.append('data', JSON.stringify({
+        id: assignmentId,
+        courseId: payload.courseId,
+        title: payload.title,
+        description: payload.description ?? '',
+        content: payload.content ?? '',
+        startDate: payload.startDate ?? null,
+        deadline: payload.deadline ?? null,
+    }))
+
+    if (file) {
+        formData.append('file', file)
+    }
 
     return await request<CourseAssignment>('/api/assignment/save', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-            id: assignmentId,
-            courseId: payload.courseId,
-            title: payload.title,
-            description: payload.description ?? '',
-            content: payload.content ?? '',
-            startDate: payload.startDate ?? null,
-            deadline: payload.deadline ?? null,
-        }),
+        body: formData,
     })
 }
 
@@ -402,30 +414,27 @@ export async function fetchAssignmentById(id: number): Promise<Assignment | null
     }
 }
 
-export async function submitAssignment(assignmentId: number, content: string): Promise<void> {
+export async function submitAssignment(assignmentId: number, content: string, file?: File): Promise<void> {
     const token = localStorage.getItem('authToken')
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-    }
+    const headers: Record<string, string> = {}
     if (token) {
         headers['Authorization'] = `Bearer ${token}`
     }
 
-    // The backend endpoint is /submissions/save and it takes AssignmentSubmissionDto
-    // The backend implementation of saveAssignmentSubmission:
-    // int studentId = getCurrentStudent().getId();
-    // dto.setStudentId(studentId);
-    // So we don't need to send studentId, just assignmentId and content.
-
-    const body = {
+    const formData = new FormData()
+    formData.append('data', JSON.stringify({
         assignmentId,
-        studentId: 0, // Ignored by backend
+        studentId: 0,
         content
+    }))
+
+    if (file) {
+        formData.append('file', file)
     }
 
     await request<unknown>('/api/assignment/submissions/save', {
         method: 'POST',
         headers,
-        body: JSON.stringify(body)
+        body: formData
     })
 }

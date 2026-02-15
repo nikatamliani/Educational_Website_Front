@@ -20,6 +20,7 @@ export const AssignmentDetailsPage: React.FC = () => {
     const [assignment, setAssignment] = useState<Assignment | null>(null)
     const [loading, setLoading] = useState(true)
     const [submissionContent, setSubmissionContent] = useState('')
+    const [submissionFile, setSubmissionFile] = useState<File | null>(null)
     const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
@@ -47,17 +48,18 @@ export const AssignmentDetailsPage: React.FC = () => {
     })
 
     const handleSubmit = async () => {
-        if (!assignment || !submissionContent.trim()) return
+        if (!assignment || !submissionFile) return
 
         setSubmitting(true)
         try {
-            await submitAssignment(assignment.id, submissionContent)
+            await submitAssignment(assignment.id, submissionContent, submissionFile || undefined)
             // Refresh assignment to separate status update
             const updated = await fetchAssignmentById(assignment.id)
             if (updated) {
                 setAssignment(updated)
             }
             setSubmissionContent('')
+            setSubmissionFile(null)
         } catch (error) {
             console.error('Failed to submit assignment:', error)
             alert('Failed to submit assignment. Please try again.')
@@ -167,8 +169,16 @@ export const AssignmentDetailsPage: React.FC = () => {
 
                 {assignment.content && (
                     <div style={{ marginBottom: '2rem', color: '#d1d5db', lineHeight: '1.6' }}>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', marginBottom: '0.5rem' }}>Instructions</h3>
-                        <div style={{ whiteSpace: 'pre-wrap' }}>{assignment.content}</div>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', marginBottom: '0.5rem' }}>Instructions / File</h3>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>
+                            {assignment.content.startsWith('http') ? (
+                                <a href={assignment.content} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                    View Attached File
+                                </a>
+                            ) : (
+                                assignment.content
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -206,7 +216,13 @@ export const AssignmentDetailsPage: React.FC = () => {
                                     whiteSpace: 'pre-wrap'
                                 }}>
                                     <h4 style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Your Submission:</h4>
-                                    {assignment.submissionContent}
+                                    {assignment.submissionContent.startsWith('http') ? (
+                                        <a href={assignment.submissionContent} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                            View Submitted File
+                                        </a>
+                                    ) : (
+                                        assignment.submissionContent
+                                    )}
                                 </div>
                             )}
                         </>
@@ -238,29 +254,40 @@ export const AssignmentDetailsPage: React.FC = () => {
                                     whiteSpace: 'pre-wrap'
                                 }}>
                                     <h4 style={{ fontSize: '0.9rem', color: '#93c5fd', marginBottom: '0.5rem' }}>Current Submission:</h4>
-                                    {assignment.submissionContent}
+                                    {assignment.submissionContent.startsWith('http') ? (
+                                        <a href={assignment.submissionContent} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                            View Submitted File
+                                        </a>
+                                    ) : (
+                                        assignment.submissionContent
+                                    )}
                                 </div>
                             )}
-                            <textarea
-                                value={submissionContent}
-                                onChange={(e) => setSubmissionContent(e.target.value)}
-                                placeholder="Type your submission content here..."
-                                style={{
-                                    width: '100%',
-                                    minHeight: '150px',
-                                    padding: '1rem',
-                                    borderRadius: '0.5rem',
-                                    backgroundColor: '#111827',
-                                    border: '1px solid #4b5563',
-                                    color: 'white',
-                                    fontFamily: 'inherit',
-                                    resize: 'vertical'
-                                }}
-                            />
+
+                            {/* File Submission Input */}
+                            <div style={{ marginBottom: '0.5rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
+                                    Upload File (Recommended)
+                                </label>
+                                <input
+                                    type="file"
+                                    onChange={(e) => setSubmissionFile(e.target.files?.[0] || null)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        borderRadius: '0.5rem',
+                                        backgroundColor: '#111827',
+                                        border: '1px solid #4b5563',
+                                        color: 'white',
+                                    }}
+                                />
+                            </div>
+
+
                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                 <Button
                                     onClick={handleSubmit}
-                                    disabled={submitting || !submissionContent.trim()}
+                                    disabled={submitting || !submissionFile}
                                     variant="primary"
                                 >
                                     {submitting ? 'Submitting...' : 'Submit Assignment'}

@@ -77,24 +77,29 @@ export async function enrollInCourse(courseId: number): Promise<void> {
   })
 }
 
-export async function createCourse(course: Partial<Course>): Promise<Course> {
+export async function createCourse(course: Partial<Course>, file?: File): Promise<Course> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
 
   if (!token) {
     throw new Error('You must be logged in as a teacher to create a course.')
   }
 
+  const formData = new FormData()
+  formData.append('data', JSON.stringify(course))
+  if (file) {
+    formData.append('file', file)
+  }
+
   return request<Course>('/api/course/create', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(course),
+    body: formData,
   })
 }
 
-export async function updateCourse(course: Partial<Course>): Promise<Course> {
+export async function updateCourse(course: Partial<Course>, file?: File): Promise<Course> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
 
   if (!token) {
@@ -105,13 +110,18 @@ export async function updateCourse(course: Partial<Course>): Promise<Course> {
     throw new Error('Course ID is required for update.')
   }
 
+  const formData = new FormData()
+  formData.append('data', JSON.stringify(course))
+  if (file) {
+    formData.append('file', file)
+  }
+
   return request<Course>('/api/course/update', {
     method: 'POST', // Backend uses POST for update
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(course),
+    body: formData,
   })
 }
 

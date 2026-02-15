@@ -4,7 +4,7 @@ import { type Course } from '../api/courses'
 
 interface CourseFormProps {
     initialData?: Partial<Course>
-    onSubmit: (data: Partial<Course>) => Promise<void>
+    onSubmit: (data: Partial<Course>, file?: File) => Promise<void>
     onCancel: () => void
     isLoading: boolean
     error: string | null
@@ -28,6 +28,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
         syllabus: '',
         ...initialData
     })
+    const [syllabusFile, setSyllabusFile] = useState<File | null>(null)
 
     // Reset form when initialData changes (for switching between create/edit)
     useEffect(() => {
@@ -40,11 +41,16 @@ export const CourseForm: React.FC<CourseFormProps> = ({
             syllabus: '',
             ...initialData
         })
+        setSyllabusFile(null)
     }, [initialData])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        await onSubmit(formData)
+        const payload = {
+            ...formData,
+            startDate: formData.startDate && formData.startDate.length === 16 ? `${formData.startDate}:00` : formData.startDate
+        }
+        await onSubmit(payload, syllabusFile || undefined)
     }
 
     return (
@@ -130,6 +136,26 @@ export const CourseForm: React.FC<CourseFormProps> = ({
                         style={{
                             width: '100%', padding: '0.75rem', borderRadius: '0.5rem',
                             background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(148, 163, 184, 0.2)', color: 'white', colorScheme: 'dark'
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Syllabus File</label>
+                    {/* Show current syllabus if available (and not replaced) */}
+                    {formData.syllabus && !syllabusFile && (
+                        <div style={{ marginBottom: '0.5rem', fontSize: '0.85rem', color: '#93c5fd' }}>
+                            <a href={formData.syllabus} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                                View Current Syllabus
+                            </a>
+                        </div>
+                    )}
+                    <input
+                        type="file"
+                        onChange={e => setSyllabusFile(e.target.files?.[0] || null)}
+                        style={{
+                            width: '100%', padding: '0.75rem', borderRadius: '0.5rem',
+                            background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(148, 163, 184, 0.2)', color: 'white'
                         }}
                     />
                 </div>

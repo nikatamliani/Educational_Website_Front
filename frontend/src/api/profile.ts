@@ -61,14 +61,21 @@ export interface UpdateTeacherPayload extends ProfileBase {
 export async function updateMyProfile(
     data: UpdateStudentPayload | UpdateTeacherPayload,
     role: 'student' | 'teacher',
+    imageFile?: File
 ): Promise<void> {
     const token = localStorage.getItem('authToken')
     if (!token) throw new Error('Not authenticated')
 
-    const endpoint = role === 'teacher' ? '/api/auth/teacher/update' : '/api/auth/student/update'
+    const formData = new FormData()
+    formData.append('data', JSON.stringify(data))
+    if (imageFile) {
+        formData.append('file', imageFile)
+    }
+
+    const endpoint = role === 'teacher' ? '/api/teacher/update' : '/api/student/update'
     return request<void>(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify(data),
+        body: formData,
     })
 }

@@ -38,19 +38,17 @@ export async function fetchTeacherByUsername(username: string): Promise<Teacher 
     }
 }
 
-export async function updateTeacher(username: string, data: Partial<Teacher>): Promise<void> {
+export async function updateTeacher(username: string, data: Partial<Teacher>, file?: File): Promise<void> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-    }
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+    const formData = new FormData()
+    formData.append('data', JSON.stringify({ ...data, username }))
+    if (file) {
+        formData.append('file', file)
     }
 
-    // Following pattern in profile.ts: POST to /api/auth/teacher/update
-    await request<void>(`/api/auth/teacher/update`, {
+    await request<void>(`/api/teacher/update`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ ...data, username }),
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData,
     })
 }

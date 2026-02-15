@@ -23,25 +23,29 @@ export async function fetchLessonsByCourse(courseId: number): Promise<LessonDto[
     })
 }
 
-export async function createLesson(lesson: Partial<LessonDto>): Promise<LessonDto> {
+export async function createLesson(lesson: Partial<LessonDto>, file?: File): Promise<LessonDto> {
+    const headers = authHeaders()
+    const formData = new FormData()
+    formData.append('data', JSON.stringify(lesson))
+    if (file) formData.append('file', file)
+
     return request<LessonDto>('/api/lessons/save', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders(),
-        },
-        body: JSON.stringify(lesson),
+        headers,
+        body: formData,
     })
 }
 
-export async function updateLesson(lesson: Partial<LessonDto>): Promise<LessonDto> {
+export async function updateLesson(lesson: Partial<LessonDto>, file?: File): Promise<LessonDto> {
+    const headers = authHeaders()
+    const formData = new FormData()
+    formData.append('data', JSON.stringify(lesson))
+    if (file) formData.append('file', file)
+
     return request<LessonDto>('/api/lessons/save', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders(),
-        },
-        body: JSON.stringify(lesson),
+        headers,
+        body: formData,
     })
 }
 

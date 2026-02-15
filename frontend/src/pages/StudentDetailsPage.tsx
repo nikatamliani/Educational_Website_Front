@@ -17,6 +17,7 @@ export const StudentDetailsPage: React.FC = () => {
     const [editForm, setEditForm] = useState<Partial<Student>>({})
     const [saving, setSaving] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
+    const [file, setFile] = useState<File | null>(null)
 
     useEffect(() => {
         loadStudent()
@@ -40,6 +41,7 @@ export const StudentDetailsPage: React.FC = () => {
         if (!isEditing && student) {
             setEditForm(student) // Reset form on open
             setSaveError(null)
+            setFile(null)
         }
     }
 
@@ -54,7 +56,7 @@ export const StudentDetailsPage: React.FC = () => {
         setSaving(true)
         setSaveError(null)
         try {
-            await updateStudent(username, editForm)
+            await updateStudent(username, editForm, file || undefined)
             // Refresh data
             const updated = { ...student, ...editForm } as Student
             setStudent(updated)
@@ -149,13 +151,16 @@ export const StudentDetailsPage: React.FC = () => {
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Image URL</label>
+                                <label>Profile Image</label>
                                 <input
-                                    name="image"
-                                    value={editForm.image || ''}
-                                    onChange={handleInputChange}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            setFile(e.target.files[0])
+                                        }
+                                    }}
                                     className="form-input"
-                                    placeholder="https://"
                                 />
                             </div>
 

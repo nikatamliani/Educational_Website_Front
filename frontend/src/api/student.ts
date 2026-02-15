@@ -36,21 +36,18 @@ export async function fetchStudentByUsername(username: string): Promise<Student 
     }
 }
 
-export async function updateStudent(username: string, data: Partial<Student>): Promise<void> {
+export async function updateStudent(username: string, data: Partial<Student>, file?: File): Promise<void> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-    }
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+    // Use FormData for multipart file upload support
+    const formData = new FormData()
+    formData.append('data', JSON.stringify({ ...data, username }))
+    if (file) {
+        formData.append('file', file)
     }
 
-    // Following pattern in profile.ts: POST to /api/auth/student/update
-    // Alternatively, if it's a direct resource update: /api/student/update
-    // We'll try /api/auth/student/update which exists in profile.ts
-    await request<void>(`/api/auth/student/update`, {
+    await request<void>(`/api/student/update`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ ...data, username }), // Ensure identifier is included
+        headers: token ? { Authorization: `Bearer ${token}` } : {}, // Content-Type header removed for FormData
+        body: formData,
     })
 }

@@ -209,10 +209,25 @@ export function CourseAssignmentPage() {
                                         {sub.content && (
                                             <div style={{
                                                 background: 'rgba(255,255,255,0.05)', borderRadius: '6px',
-                                                padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: '#d1d5db',
-                                                marginBottom: '0.5rem', maxHeight: '4em', overflow: 'hidden',
+                                                padding: '0.5rem 0.75rem', fontSize: '0.85rem',
+                                                marginBottom: '0.5rem', overflow: 'hidden',
                                             }}>
-                                                {sub.content}
+                                                {(() => {
+                                                    // Remove any accidental quotes from the string
+                                                    const url = sub.content.replace(/['"]+/g, '').trim();
+
+                                                    return (
+                                                        <a
+                                                            href={url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: 500 }}
+                                                            onClick={(e) => e.stopPropagation()} // Important: stops the card's onClick from firing
+                                                        >
+                                                            View Submission
+                                                        </a>
+                                                    );
+                                                })()}
                                             </div>
                                         )}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -311,7 +326,20 @@ export function CourseAssignmentPage() {
                                     maxHeight: '8em', overflow: 'auto', lineHeight: '1.5',
                                     border: '1px solid rgba(255,255,255,0.06)',
                                 }}>
-                                    {gradingSubmission.content}
+                                    {(() => {
+                                        if (!gradingSubmission.content) return null
+                                        // Trim, then remove surrounding quotes, then trim again
+                                        const clean = gradingSubmission.content.trim().replace(/^["']+|["']+$/g, '').trim()
+                                        const isUrl = clean.startsWith('http') || clean.startsWith('/')
+
+                                        return isUrl ? (
+                                            <a href={clean} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                                View Submission
+                                            </a>
+                                        ) : (
+                                            gradingSubmission.content
+                                        )
+                                    })()}
                                 </div>
                             </div>
                         )}

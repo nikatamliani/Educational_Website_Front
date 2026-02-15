@@ -100,7 +100,7 @@ export function MyCoursesPage() {
     }
   }
 
-  const handleFormSubmit = async (data: Partial<Course>) => {
+  const handleFormSubmit = async (data: Partial<Course>, file?: File) => {
     try {
       setSubmitting(true)
       setSubmitError(null)
@@ -109,14 +109,14 @@ export function MyCoursesPage() {
         await createCourse({
           ...data,
           startDate: data.startDate || null,
-        })
+        }, file)
       } else {
         if (!editingCourseId) return
         await updateCourse({
           ...data,
           id: editingCourseId,
           startDate: data.startDate || null,
-        })
+        }, file)
       }
 
       // Refresh list

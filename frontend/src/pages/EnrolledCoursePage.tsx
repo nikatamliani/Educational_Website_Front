@@ -195,7 +195,13 @@ export function EnrolledCoursePage() {
                                                     color: '#d1d5db', lineHeight: '1.7', whiteSpace: 'pre-line',
                                                     marginTop: '1rem', marginBottom: '1rem', fontSize: '0.95rem',
                                                 }}>
-                                                    {lesson.content}
+                                                    {lesson.content.startsWith('http') ? (
+                                                        <a href={lesson.content} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                                            View Lesson Material
+                                                        </a>
+                                                    ) : (
+                                                        lesson.content
+                                                    )}
                                                 </p>
                                             )}
                                             <div style={{

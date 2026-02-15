@@ -86,6 +86,10 @@ export function TeacherCoursePage() {
         endDate: undefined,
     })
 
+    // File states
+    const [assignmentFile, setAssignmentFile] = useState<File | null>(null)
+    const [lessonFile, setLessonFile] = useState<File | null>(null)
+
     // Edit Course State
     const [isEditingCourse, setIsEditingCourse] = useState(false)
     const [courseEditError, setCourseEditError] = useState<string | null>(null)
@@ -196,12 +200,12 @@ export function TeacherCoursePage() {
     }
 
     // Course Management Handlers
-    const handleEditCourseSubmit = async (data: Partial<Course>) => {
+    const handleEditCourseSubmit = async (data: Partial<Course>, file?: File) => {
         if (!course) return
         try {
             setIsUpdatingCourse(true)
             setCourseEditError(null)
-            const updated = await updateCourse({ ...data, id: course.id })
+            const updated = await updateCourse({ ...data, id: course.id }, file)
             setCourse(updated)
             setIsEditingCourse(false)
         } catch (err) {
@@ -235,14 +239,14 @@ export function TeacherCoursePage() {
             const payload = {
                 ...newAssignment,
                 courseId: course.id,
-                startDate: newAssignment.startDate || undefined,
-                deadline: newAssignment.deadline || undefined,
+                startDate: newAssignment.startDate && newAssignment.startDate.length === 16 ? `${newAssignment.startDate}:00` : newAssignment.startDate,
+                deadline: newAssignment.deadline && newAssignment.deadline.length === 16 ? `${newAssignment.deadline}:00` : newAssignment.deadline,
             }
 
             if (editingAssignmentId) {
-                await updateAssignment(editingAssignmentId, payload)
+                await updateAssignment(editingAssignmentId, payload, assignmentFile || undefined)
             } else {
-                await createAssignment(payload)
+                await createAssignment(payload, assignmentFile || undefined)
             }
 
             // Refresh assignment list
@@ -269,6 +273,7 @@ export function TeacherCoursePage() {
         })
         setShowCreateForm(true)
         setCreateError(null)
+        setAssignmentFile(null)
         // Scroll to form
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -277,6 +282,7 @@ export function TeacherCoursePage() {
         setShowCreateForm(false)
         setEditingAssignmentId(null)
         setCreateError(null)
+        setAssignmentFile(null)
         setNewAssignment({ courseId: 0, title: '', description: '', content: '', startDate: '', deadline: '' })
     }
 
@@ -376,16 +382,23 @@ export function TeacherCoursePage() {
             setCreatingLesson(true)
             setCreateLessonError(null)
 
+            const formatDateTime = (dt: string | undefined) => {
+                if (!dt) return undefined
+                return dt.length === 16 ? `${dt}:00` : dt
+            }
+
             const payload: Partial<LessonDto> = {
                 ...newLesson,
                 courseId: course.id,
-                id: editingLessonId || 0
+                id: editingLessonId || 0,
+                startDate: formatDateTime(newLesson.startDate as unknown as string),
+                endDate: formatDateTime(newLesson.endDate as unknown as string)
             }
 
             if (editingLessonId) {
-                await updateLesson(payload)
+                await updateLesson(payload, lessonFile || undefined)
             } else {
-                await createLesson(payload)
+                await createLesson(payload, lessonFile || undefined)
             }
 
             const data = await fetchLessonsByCourse(course.id)
@@ -408,6 +421,7 @@ export function TeacherCoursePage() {
             endDate: lesson.endDate
         })
         setShowLessonForm(true)
+        setLessonFile(null)
     }
 
     const handleDeleteLesson = async (e: React.MouseEvent, lessonId: number) => {
@@ -427,6 +441,7 @@ export function TeacherCoursePage() {
         setShowLessonForm(false)
         setEditingLessonId(null)
         setCreateLessonError(null)
+        setLessonFile(null)
         setNewLesson({ title: '', content: '', startDate: undefined, endDate: undefined })
     }
 
@@ -503,7 +518,13 @@ export function TeacherCoursePage() {
                             <section className="course-section">
                                 <h2>Syllabus</h2>
                                 <div className="syllabus-content" style={{ whiteSpace: 'pre-line', color: '#e5e7eb', lineHeight: '1.6' }}>
-                                    {course.syllabus}
+                                    {course.syllabus && (course.syllabus.startsWith('http') || course.syllabus.startsWith('/')) ? (
+                                        <a href={course.syllabus} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                            View Syllabus
+                                        </a>
+                                    ) : (
+                                        course.syllabus
+                                    )}
                                 </div>
                             </section>
                         )}
@@ -657,17 +678,22 @@ export function TeacherCoursePage() {
                                         </div>
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                                            <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Content / Instructions</label>
-                                            <textarea
-                                                rows={4}
-                                                value={newAssignment.content}
-                                                onChange={(e) => setNewAssignment((p) => ({ ...p, content: e.target.value }))}
-                                                placeholder="Detailed instructions for students"
+                                            <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Assignment Content / File</label>
+
+                                            {/* Show existing content URL if editing */}
+                                            {editingAssignmentId && newAssignment.content && !assignmentFile && (
+                                                <div style={{ fontSize: '0.85rem', color: '#60a5fa', marginBottom: '0.5rem', wordBreak: 'break-all' }}>
+                                                    Current File/Content: {newAssignment.content.startsWith('http') ? <a href={newAssignment.content} target="_blank" rel="noopener noreferrer">View File</a> : newAssignment.content}
+                                                </div>
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                onChange={(e) => setAssignmentFile(e.target.files?.[0] || null)}
                                                 style={{
                                                     padding: '0.65rem 0.85rem', borderRadius: '0.5rem',
                                                     border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(15, 23, 42, 0.6)',
-                                                    color: '#e5e7eb', fontSize: '0.95rem', outline: 'none', resize: 'vertical',
-                                                    fontFamily: 'inherit',
+                                                    color: '#e5e7eb', fontSize: '0.95rem',
                                                 }}
                                             />
                                         </div>
@@ -747,6 +773,23 @@ export function TeacherCoursePage() {
                                                     <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.4rem', lineHeight: '1.5' }}>
                                                         {a.description.length > 120 ? a.description.slice(0, 120) + '…' : a.description}
                                                     </p>
+                                                )}
+                                                {a.content && (
+                                                    <div style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+                                                        {a.content.startsWith('http') ? (
+                                                            <a
+                                                                href={a.content}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                style={{ color: '#60a5fa', textDecoration: 'underline' }}
+                                                            >
+                                                                View Assignment File
+                                                            </a>
+                                                        ) : (
+                                                            <span style={{ color: '#9ca3af' }}>{a.content.length > 50 ? a.content.slice(0, 50) + '…' : a.content}</span>
+                                                        )}
+                                                    </div>
                                                 )}
                                                 <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: '#6b7280', flexWrap: 'wrap' }}>
                                                     {a.startDate && (
@@ -963,17 +1006,21 @@ export function TeacherCoursePage() {
                                         </div>
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                                            <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Content</label>
-                                            <textarea
-                                                rows={4}
-                                                value={newLesson.content || ''}
-                                                onChange={(e) => setNewLesson((p) => ({ ...p, content: e.target.value }))}
-                                                placeholder="Lesson content or materials"
+                                            <label style={{ fontSize: '0.85rem', color: '#9ca3af', fontWeight: 500 }}>Content / File</label>
+
+                                            {editingLessonId && newLesson.content && !lessonFile && (
+                                                <div style={{ fontSize: '0.85rem', color: '#60a5fa', marginBottom: '0.5rem', wordBreak: 'break-all' }}>
+                                                    Current File/Content: {newLesson.content.startsWith('http') ? <a href={newLesson.content} target="_blank" rel="noopener noreferrer">View File</a> : newLesson.content}
+                                                </div>
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                onChange={(e) => setLessonFile(e.target.files?.[0] || null)}
                                                 style={{
                                                     padding: '0.65rem 0.85rem', borderRadius: '0.5rem',
                                                     border: '1px solid rgba(148, 163, 184, 0.25)', background: 'rgba(15, 23, 42, 0.6)',
-                                                    color: '#e5e7eb', fontSize: '0.95rem', outline: 'none', resize: 'vertical',
-                                                    fontFamily: 'inherit',
+                                                    color: '#e5e7eb', fontSize: '0.95rem',
                                                 }}
                                             />
                                         </div>
@@ -1050,7 +1097,13 @@ export function TeacherCoursePage() {
                                                 </h3>
                                                 {l.content && (
                                                     <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.4rem', lineHeight: '1.5' }}>
-                                                        {l.content.length > 120 ? l.content.slice(0, 120) + '…' : l.content}
+                                                        {l.content.startsWith('http') ? (
+                                                            <a href={l.content} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }} onClick={(e) => e.stopPropagation()}>
+                                                                View File
+                                                            </a>
+                                                        ) : (
+                                                            l.content.length > 120 ? l.content.slice(0, 120) + '…' : l.content
+                                                        )}
                                                     </p>
                                                 )}
                                                 <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: '#6b7280', flexWrap: 'wrap' }}>

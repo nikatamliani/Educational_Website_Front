@@ -19,6 +19,7 @@ export function ProfilePage() {
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [image, setImage] = useState('')
+    const [imageFile, setImageFile] = useState<File | null>(null)
 
     // Teacher-only fields
     const [department, setDepartment] = useState('')
@@ -96,11 +97,18 @@ export function ProfilePage() {
         setSaving(true)
         try {
             if (role === 'teacher') {
-                await updateMyProfile({ ...shared, department, bio }, 'teacher')
+                await updateMyProfile({ ...shared, department, bio }, 'teacher', imageFile || undefined)
             } else {
-                await updateMyProfile(shared, 'student')
+                await updateMyProfile(shared, 'student', imageFile || undefined)
             }
             setSuccessMsg('Profile updated successfully!')
+
+            // Reload profile to get new image URL
+            const updated = await fetchMyProfile()
+            setProfile(updated)
+            setImage(updated.image ?? '')
+            setImageFile(null)
+
             setNewPassword('')
             setConfirmPassword('')
         } catch (err) {
@@ -218,8 +226,13 @@ export function ProfilePage() {
                     </div>
 
                     <div>
-                        <label style={labelStyle}>Profile Image URL</label>
-                        <input style={inputStyle} value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://example.com/avatar.jpg" onFocus={focusHandler} onBlur={blurHandler} />
+                        <label style={labelStyle}>Profile Image</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                            style={inputStyle}
+                        />
                     </div>
                 </div>
 

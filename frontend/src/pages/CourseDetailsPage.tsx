@@ -148,7 +148,13 @@ export function CourseDetailsPage() {
                             <section className="course-section">
                                 <h2>Syllabus</h2>
                                 <div className="syllabus-content" style={{ whiteSpace: 'pre-line', color: '#e5e7eb', lineHeight: '1.6' }}>
-                                    {course.syllabus}
+                                    {course.syllabus.startsWith('http') ? (
+                                        <a href={course.syllabus} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                            View Syllabus File
+                                        </a>
+                                    ) : (
+                                        course.syllabus
+                                    )}
                                 </div>
                             </section>
                         )}
