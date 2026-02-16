@@ -217,22 +217,28 @@ export function CourseAssignmentPage() {
                                                 background: 'rgba(255,255,255,0.05)', borderRadius: '6px',
                                                 padding: '0.5rem 0.75rem', fontSize: '0.85rem',
                                                 marginBottom: '0.5rem', overflow: 'hidden',
+                                                textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                                             }}>
                                                 {(() => {
                                                     // Remove any accidental quotes from the string
-                                                    const url = sub.content.replace(/['"]+/g, '').trim();
+                                                    const clean = sub.content.replace(/['"]+/g, '').trim();
+                                                    const isUrl = /^(https?:\/\/|\/|[\w-]+\.\w+)/.test(clean);
 
-                                                    return (
-                                                        <a
-                                                            href={url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: 500 }}
-                                                            onClick={(e) => e.stopPropagation()} // Important: stops the card's onClick from firing
-                                                        >
-                                                            View Submission
-                                                        </a>
-                                                    );
+                                                    if (isUrl) {
+                                                        const href = clean.startsWith('http') || clean.startsWith('/') ? clean : `https://${clean}`;
+                                                        return (
+                                                            <a
+                                                                href={href}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: 500 }}
+                                                                onClick={(e) => e.stopPropagation()} // Important: stops the card's onClick from firing
+                                                            >
+                                                                View Submission
+                                                            </a>
+                                                        );
+                                                    }
+                                                    return <span style={{ color: '#d1d5db' }}>{clean}</span>;
                                                 })()}
                                             </div>
                                         )}
@@ -341,10 +347,16 @@ export function CourseAssignmentPage() {
                                         if (!gradingSubmission.content) return null
                                         // Trim, then remove surrounding quotes, then trim again
                                         const clean = gradingSubmission.content.trim().replace(/^["']+|["']+$/g, '').trim()
-                                        const isUrl = clean.startsWith('http') || clean.startsWith('/')
+                                        // Improved URL detection: starts with http, https, or is a file path with extension
+                                        const isUrl = /^(https?:\/\/|\/|[\w-]+\.\w+)/.test(clean)
 
                                         return isUrl ? (
-                                            <a href={clean} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                                            <a
+                                                href={clean.startsWith('http') || clean.startsWith('/') ? clean : `https://${clean}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                style={{ color: '#60a5fa', textDecoration: 'underline' }}
+                                            >
                                                 View Submission
                                             </a>
                                         ) : (

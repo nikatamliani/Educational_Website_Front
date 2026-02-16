@@ -13,7 +13,6 @@ export function StudentRegisterPage() {
     lastName: '',
     email: '',
     phoneNumber: '',
-    image: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +41,6 @@ export function StudentRegisterPage() {
         lastName: form.lastName,
         email: form.email,
         phoneNumber: form.phoneNumber,
-        image: form.image || undefined,
       })
 
       setSuccess('Student registered successfully. You can now log in.')
@@ -113,13 +111,6 @@ export function StudentRegisterPage() {
             onChange={(e) => updateField('phoneNumber', e.target.value)}
           />
         </div>
-
-        <Input
-          label="Profile image URL"
-          type="url"
-          value={form.image}
-          onChange={(e) => updateField('image', e.target.value)}
-        />
 
         {error && <div className="form-error">{error}</div>}
         {success && <div className="form-success">{success}</div>}

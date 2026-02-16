@@ -15,7 +15,6 @@ export function TeacherRegisterPage() {
     phoneNumber: '',
     department: '',
     bio: '',
-    image: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +53,6 @@ export function TeacherRegisterPage() {
         phoneNumber: form.phoneNumber,
         department: form.department,
         bio: form.bio || undefined,
-        image: form.image || undefined,
       })
 
       setSuccess('Teacher registered successfully. You can now log in.')
@@ -132,13 +130,6 @@ export function TeacherRegisterPage() {
             type="text"
             value={form.department}
             onChange={(e) => updateField('department', e.target.value)}
-          />
-
-          <Input
-            label="Profile image URL"
-            type="url"
-            value={form.image}
-            onChange={(e) => updateField('image', e.target.value)}
           />
         </div>
 
