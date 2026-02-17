@@ -105,11 +105,15 @@ export const CalendarPage: React.FC = () => {
     const [month, setMonth] = useState(now.getMonth())
 
     useEffect(() => {
-        setLoading(true)
-        fetchCalendarEvents(role)
-            .then(setEvents)
-            .catch(() => setEvents([]))
-            .finally(() => setLoading(false))
+        if (role === 'student' || role === 'teacher') {
+            setLoading(true)
+            fetchCalendarEvents(role)
+                .then(setEvents)
+                .catch(() => setEvents([]))
+                .finally(() => setLoading(false))
+        } else {
+            setLoading(false)
+        }
     }, [role])
 
     const cells = useMemo(() => buildMonth(year, month, events), [year, month, events])
